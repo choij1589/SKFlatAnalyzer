@@ -1,22 +1,24 @@
+# Conv
+DYJets
+DYJets_MG
+DYJets10to50_MG
+TTG
+WWG
+ZGToLLG
 # VV
 WZTo3LNu_amcatnlo
 ZZTo4L_powheg
-# tt+X
+# TT+X
 ttWToLNu
 ttZToLLNuNu
 ttHToNonbb
+# rare
 tZq
 tHq
-TTG
-# Conversion
-DYJets
-ZGToLLG
-# rare
 WWW
 WWZ
 WZZ
 ZZZ
-WWG
 TTTT
 VBF_HToZZTo4L
 GluGluHToZZTo4L
