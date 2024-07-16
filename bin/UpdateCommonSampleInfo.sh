@@ -81,7 +81,7 @@ do
 	    fi
 	fi
     fi
-done 3< <(find $SKFlatOutputDir$SKFlatV/GetEffLumi -type f|sort -V)
+done 3< <(find $SKFlatOutputDir/$SKFlatV/GetEffLumi -type f|sort -V)
 
 
 

@@ -297,9 +297,9 @@ class MatrixEstimator(TriLeptonBase):
             super().FillHist(f"{channel}/{syst}/ZCand/eta", ZCand.Eta(), weight, 100, -5., 5.)
             super().FillHist(f"{channel}/{syst}/ZCand/phi", ZCand.Phi(), weight, 64, -3.2, 3.2)
             super().FillHist(f"{channel}/{syst}/ZCand/mass", ZCand.M(), weight, 200, 0., 200.)
-            super().FillHist(f"{channel}/{{syst}}/nonprompt/pt", nonprompt.Pt(), weight, 300, 0., 300.)
-            super().FillHist(f"{channel}/{{syst}}/nonprompt/eta", nonprompt.Eta(), weight, 50, -2.5, 2.5)
-            super().FillHist(f"{channel}/{{syst}}/nonprompt/phi", nonprompt.Phi(), weight, 64, -3.2, 3.2)
+            super().FillHist(f"{channel}/{syst}/nonprompt/pt", nonprompt.Pt(), weight, 300, 0., 300.)
+            super().FillHist(f"{channel}/{syst}/nonprompt/eta", nonprompt.Eta(), weight, 50, -2.5, 2.5)
+            super().FillHist(f"{channel}/{syst}/nonprompt/phi", nonprompt.Phi(), weight, 64, -3.2, 3.2)
         else:
             mu_ss1, mu_ss2, mu_os = self.configureChargeOf(muons)
             pair1, pair2 = (mu_ss1+mu_os), (mu_ss2+mu_os)
@@ -318,9 +318,9 @@ class MatrixEstimator(TriLeptonBase):
             super().FillHist(f"{channel}/{syst}/nZCand/eta", nZCand.Eta(), weight, 100, -5., 5.)
             super().FillHist(f"{channel}/{syst}/nZCand/phi", nZCand.Phi(), weight, 64, -3.2, 3.2)
             super().FillHist(f"{channel}/{syst}/nZCand/mass", nZCand.M(), weight, 300, 0., 300.)
-            super().FillHist(f"{channel}/{{syst}}/nonprompt/pt", nonprompt.Pt(), weight, 300, 0., 300.)
-            super().FillHist(f"{channel}/{{syst}}/nonprompt/eta", nonprompt.Eta(), weight, 48, -2.4, 2.4)
-            super().FillHist(f"{channel}/{{syst}}/nonprompt/phi", nonprompt.Phi(), weight, 64, -3.2, 3.2)
+            super().FillHist(f"{channel}/{syst}/nonprompt/pt", nonprompt.Pt(), weight, 300, 0., 300.)
+            super().FillHist(f"{channel}/{syst}/nonprompt/eta", nonprompt.Eta(), weight, 48, -2.4, 2.4)
+            super().FillHist(f"{channel}/{syst}/nonprompt/phi", nonprompt.Phi(), weight, 64, -3.2, 3.2)
          
         # Fill signal dependent distributions 
         for signal in self.signalStrings:

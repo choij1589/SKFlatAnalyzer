@@ -82,27 +82,33 @@ Look Analyzers/src/ExampleRun.C
 
 ## Adding samples
 To add a sample, you should add two files.  
-* data/$SKFlatV/$ERA/Sample/ForSNU/$ALIAS.txt: list of file paths.  
-* data/$SKFlatV/$ERA/Sample/CommonSampleInfo/$ALIAS.txt: alias, DAS name, cross section, nevent, sum(sign) and sum(weight).  
-
-And one file should be edited  
-* data/$SKFlatV/$ERA/Sample/SampleSummary_*.txt: CommonSampleInfo files in one file. This file is not actually used by SKFlatAnalyzer. It is just a summary for users.  
-
-You can do it manually, or use scripts as below. The scripts use SampleSummary files for all SKFlat versions to find alias and cross section. If the sample is never used before the scripts will ask you alias and cross section. If it is annoying you can make temporal SampleSummary file like data/$SKFlatV/$ERA/Sample/SampleSummary_temp.txt which containing alias, DAS name and cross section (other information is not needed).
-1. Make the file list file using bin/UpdateSampleForSNU.sh script.
+```bash
+data/$SKFlatV/$ERA/Sample/ForSNU/$ALIAS.txt               # list of file paths.  
+data/$SKFlatV/$ERA/Sample/CommonSampleInfo/$ALIAS.txt     # alias, DAS name, cross section, nevent, sum(sign) and sum(weight).
 ```
+And one file should be edited
+```bash
+data/$SKFlatV/$ERA/Sample/SampleSummary_*.txt:  # CommonSampleInfo files in one file. This file is not actually used by SKFlatAnalyzer. It is just a summary for users.  
+```
+You can do it manually, or use scripts as below. The scripts use SampleSummary files for all SKFlat versions to find alias and cross section. If the sample is never used before the scripts will ask you alias and cross section. If it is annoying you can make temporal SampleSummary file like ```data/$SKFlatV/$ERA/Sample/SampleSummary_temp.txt``` which containing alias, DAS name and cross section (other information is not needed).
+
+1. Make the file list file using bin/UpdateSampleForSNU.sh script.
+```bash
 ./bin/UpdateSampleForSNU.sh $SAMPLEDIRECTORY
 ```
 2. Run GetEffLumi analyzer to get nevent, sum(sign) and sum(weight)
-```
+```bash
 SKFlat.py -a GetEffLumi -e $ERA -n 20 -i $SAMPLEALIAS
 ```
-3. Make CommonSampleInfo file using bin/UpdateCommonSampleInfo.sh script.
-```
+3. Make CommonSampleInfo file using bin/UpdateCommonSampleInfo.sh script. It reads the root file outputs ran with singularity image, so it would be good to used singularity to avoid any ROOT version mismatch.
+```bash
+# Renew your shell!!!
+singularity shell --bind /gv0/Users/choij/SKFlatOutput /data9/Users/choij/Singularity/images/cpuonly
+source setup.sh
 ./bin/UpdateCommonSampleInfo.sh
 ```
 4. Update SampleSummary file using Summarize.py
-```
+```bash
 cd data/$SKFlatV/$ERA/Sample
 python Summarize.py
 ```
