@@ -268,8 +268,8 @@ class SampleProcessor:
                     out.write(f'    if(!m.AddFile("{thisFileName}")) exit(EIO);\n')
                 if "SkimTree" in self.analyzer:
                     skimOutDir = f"/gv0/DATA/SKFlat/{self.SKFlatV}/{self.era}"
-                    if self.outputDir:
-                        skimOutDir = f"{self.outputDir}/{self.SKFlatV}/{self.era}"
+                    if self.outputdir:
+                        skimOutDir = f"{self.outputdir}/{self.SKFlatV}/{self.era}"
                     skimOutFileName = ""
                     if self.isDATA:
                         skimOutDir = f"{skimOutDir}/DATA_{self.analyzer}/{self.sampleName}/period{self.dataPeriod}"

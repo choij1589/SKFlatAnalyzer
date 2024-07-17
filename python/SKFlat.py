@@ -124,17 +124,28 @@ def updateMasterJobDir(args):
     logging.debug(f"MasterJobDir: {master_job_dir}")
     
 def mkdirFinalOutputPath(args, includeDataSample):
+    if "SkimTree" in args.analyzer:
+        if args.output_dir:
+            final_output_path = args.output_dir
+        else:
+            final_output_path = f"/gv0/DATA/SKFlat/{ENVs['SKFlatV']}/{args.era}"
+        os.makedirs(final_output_path, exist_ok=True)
+        return final_output_path
+
     final_output_path = args.output_dir
     if not args.output_dir:
         final_output_path = f"{ENVs['SKFlatOutputDir']}/{ENVs['SKFlatV']}/{args.analyzer}/{args.era}"
+    
+    # Flags
     flags = ""
     for flag in args.userflags:
         flags += f"{flag}__"
     final_output_path = os.path.join(final_output_path, flags)
+    
+    # IsDATA?
     if includeDataSample:
         final_output_path = os.path.join(final_output_path, "DATA")
-    if "SkimTree" in args.analyzer:
-        final_output_path = f"/gv0/DATA/SKFlat/{ENVs['SKFlatV']}/{args.era}"
+    
     os.makedirs(final_output_path, exist_ok=True)
     return final_output_path
     

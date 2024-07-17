@@ -4,6 +4,9 @@
 
 https://jskim.web.cern.ch/jskim/SKFlat/Manual/Manual_SKFlat.pdf
 
+## TODO
+- To reduce CPU overload, update SKFlat.py to use condor\_wait rather than use python to read the condor outputs
+
 ## Where to put the analyzer
 TAMSA 1/2 : /data6/Users/$USER/
 Only supports for TAMSA server now.
@@ -112,10 +115,13 @@ source setup.sh
 cd data/$SKFlatV/$ERA/Sample
 python Summarize.py
 ```
-
 # Tips
+## Skimming samples
+It is a good idea to first skim the sample in dedicated directory and move it /gv0/DATA/SKFlat, e.g.:
+```bash
+SKFlat.py -a SkimTree_SS2lOR3l -i DYJets -e 2017 -n 30 -o /gv0/Users/choij/temp
+```
 
 ## Making PR
-
 Start from the CMSSNU's master branch of CMSSNU when making pull request to prevent anoying conflicts.
 
