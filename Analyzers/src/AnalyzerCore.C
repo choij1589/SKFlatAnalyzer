@@ -2238,6 +2238,17 @@ void AnalyzerCore::FillHist(TString histname, double value, double weight, vecto
   this_hist->Fill(value, weight);
 }
 
+void AnalyzerCore::FillHist(TString histname, double value_x, double value_y, double weight, vector<double> &xbins, vector<double> &ybins) {
+  TH2D *this_hist = GetHist2D(histname);
+  if ( !this_hist) {
+    this_hist = new TH2D(histname, "", xbins.size()-1, xbins.data(), ybins.size()-1, ybins.data());
+    this_hist->SetDirectory(NULL);
+    maphist_TH2D[histname] = this_hist;
+  }
+  this_hist->Fill(value_x, value_y, weight);
+}
+
+
 void AnalyzerCore::FillHist(TString histname,
                 double value_x, double value_y,
                 double weight,

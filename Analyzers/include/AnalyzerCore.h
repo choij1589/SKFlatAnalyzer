@@ -232,6 +232,7 @@ public:
   void FillHist(TString histname, double value, double weight, int n_bin, double x_min, double x_max);
   void FillHist(TString histname, double value, double weight, int n_bin, double *xbins);
   void FillHist(TString histname, double value, double weight, vector<double> &xbins);
+  void FillHist(TString histname, double value_x, double value_y, double weight, vector<double> &xbins, vector<double> &ybins);
   void FillHist(TString histname,
                 double value_x, double value_y,
                 double weight,

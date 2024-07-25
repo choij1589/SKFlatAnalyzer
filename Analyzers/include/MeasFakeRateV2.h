@@ -4,9 +4,9 @@
 #include "AnalyzerCore.h"
 #include "NonpromptParameter.h"
 
-class IDContainer {
+class IDContainerV2 {
 public:
-    IDContainer() { Tight = Loose = Veto = "";}
+    IDContainerV2() { Tight = Loose = Veto = "";}
     inline void SetIDs(const TString& tight, const TString& loose, const TString& veto) {
         Tight = tight; 
         Loose = loose; 
@@ -35,7 +35,7 @@ public:
     vector<double> ptcorr_bins, abseta_bins;
 
     // ID Definitions
-    IDContainer MuID, ElID;
+    IDContainerV2 MuID, ElID;
 
     // Trigger Definitions
     TString isoSglLepTrig;

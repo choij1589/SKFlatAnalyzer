@@ -24,6 +24,7 @@
 #pragma link C++ class TutorialBase+;
 #pragma link C++ class ElectronOptimization+;
 #pragma link C++ class OptElLooseWP+;
+#pragma link C++ class MeasTrigEff;
 #pragma link C++ class MeasFakeRateV2;
 #pragma link C++ class MeasFakeRateV4;
 
