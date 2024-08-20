@@ -17,11 +17,16 @@ public:
     double triggerSafePtCut;
 
     TH2D *hMuonIDSF;
-    TH2D *hMu17Leg1_Data, *hMu17Leg1_MC;
-    TH2D *hMu8Leg2_Data, *hMu8Leg2_MC;
+    // Trigger Leg Efficiencies
+    TH2D *hMu23Leg_Data, *hMu23Leg_MC;
+    TH2D *hMu17Leg_Data, *hMu17Leg_MC;
+    TH2D *hMu8Leg_Data, *hMu8Leg_MC;
+    TH2D *hEl23Leg_Data, *hEl23Leg_MC;
+    TH2D *hEl12Leg_Data, *hEl12Leg_MC;
+    // ID SF
     TH2D *hElIDSF;
-    TH2D *hEl23Leg1_Data, *hEl23Leg1_MC;
-    TH2D *hEl12Leg2_Data, *hEl12Leg2_MC;
+    //TH2D *hEl23Leg1_Data, *hEl23Leg1_MC;
+    //TH2D *hEl12Leg2_Data, *hEl12Leg2_MC;
     TH1D *hNPVEl8_Data, *hNPVEl12_Data, *hNPVEl23_Data;
     TH1D *hNPVEl8_MC, *hNPVEl12_MC, *hNPVEl23_MC;
     TH1D *hNPVMu8_Data, *hNPVMu17_Data;

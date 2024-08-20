@@ -268,31 +268,29 @@ void MeasTrigEff::measDblMuTrigEff_DZ(Event &ev, vector<Muon> &tightMuons, vecto
     const Muon &mu2 = tightMuons.at(1);
     if (! (mu1.Pt() > 20. && mu2.Pt() > 10.)) return;
     if (! (mu1.Charge()+mu2.Charge() == 0)) return;
-
     double Mll = (mu1+mu2).M();
     double dRll = mu1.DeltaR(mu2);
-
+    
     bool fire_iso = false;
     bool fire_isoDZ = false;
     bool fire_isoDZM = false;
     bool fire_isoM = false;
+   
     for (unsigned int i=0; i<Triggers.GetDblMuTrigs().size(); i++) {
-        const TString path = Triggers.GetDblMuTrigs().at(i);
+        const TString pathIso = Triggers.GetDblMuTrigs().at(i);
         const TString pathDZ = Triggers.GetDblMuDZTrigs().at(i);
         const TString pathDZM = (DataYear > 2016) ? Triggers.GetDblMuDZMTrigs().at(i) : "";
-        if (! ev.PassTrigger(path)) continue;
+        if (! ev.PassTrigger(pathIso)) continue;
         
-        unsigned int nMatchIso=0, nMatchIsoDZ=0, nMatchIsoDZM=0, nMatchIsoM=0;
-        for (const auto &mu: tightMuons) {
-            if (mu.PassPath(path)) nMatchIso++;
-            if (mu.PassPath(path) && mu.PassPath(pathDZ)) nMatchIsoDZ++;
-            if (mu.PassPath(path) && mu.PassPath(pathDZ) && mu.PassPath(pathDZM)) nMatchIsoDZM++;
-            if (mu.PassPath(path) && mu.PassPath(pathDZM)) nMatchIsoM++;
-        }
-        fire_iso = fire_iso || (nMatchIso == 2);
-        fire_isoDZ = fire_isoDZ || (nMatchIsoDZ == 2);
-        fire_isoDZM = fire_isoDZM || (nMatchIsoDZM == 2);
-        fire_isoM = fire_isoM || (nMatchIsoM == 2);
+        const bool matchIso = mu1.PassPath(pathIso) && mu2.PassPath(pathIso);
+        const bool matchIsoDZ = matchIso && mu1.PassPath(pathDZ) && mu2.PassPath(pathDZ);
+        const bool matchIsoDZM = matchIsoDZ && mu1.PassPath(pathDZM) && mu2.PassPath(pathDZM);
+        const bool matchIsoM = matchIso && mu1.PassPath(pathDZM) && mu2.PassPath(pathDZM);
+
+        fire_iso = fire_iso || matchIso;
+        fire_isoDZ = fire_isoDZ || matchIsoDZ;
+        fire_isoDZM = fire_isoDZM || matchIsoDZM;
+        fire_isoM = fire_isoM || matchIsoM;
     }
 
     bool fire_DZ = false;
@@ -302,13 +300,11 @@ void MeasTrigEff::measDblMuTrigEff_DZ(Event &ev, vector<Muon> &tightMuons, vecto
         const TString pathDZM = (DataYear > 2016) ? Triggers.GetDblMuDZMTrigs().at(i) : "";
         if (! ev.PassTrigger(pathDZ)) continue;
 
-        unsigned int nMatchDZ=0, nMatchDZM=0;
-        for (const auto &mu: tightMuons) {
-            if (mu.PassPath(pathDZ)) nMatchDZ++;
-            if (mu.PassPath(pathDZ) && mu.PassPath(pathDZM)) nMatchDZM++;   
-        }
-        fire_DZ = fire_DZ || (nMatchDZ == 2);
-        fire_DZM = fire_DZM || (nMatchDZM == 2);
+        const bool matchDZ = mu1.PassPath(pathDZ) && mu2.PassPath(pathDZ);
+        const bool matchDZM = matchDZ && mu1.PassPath(pathDZM) && mu2.PassPath(pathDZM);
+
+        fire_DZ = fire_DZ || matchDZ;
+        fire_DZM = fire_DZM || matchDZM;
     }
 
     bool fire_M = false;
@@ -316,48 +312,45 @@ void MeasTrigEff::measDblMuTrigEff_DZ(Event &ev, vector<Muon> &tightMuons, vecto
         const TString pathDZM = Triggers.GetDblMuDZMTrigs().at(i);
         if (! ev.PassTrigger(pathDZM)) continue;
 
-        unsigned int nMatchDZM=0;
-        for (const auto &mu: tightMuons) {
-            if (mu.PassPath(pathDZM)) nMatchDZM++;
-        }
-        fire_M = fire_M || (nMatchDZM == 2);
+        const bool matchDZM = mu1.PassPath(pathDZM) && mu2.PassPath(pathDZM);
+        fire_M = fire_M || matchDZM;
     }
 
-    vector<TString> SelTagList;
-    if(Mll>60 && Mll<120 && dRll>0.3) SelTagList.emplace_back("_ZWin60");
-    if(fabs(Mll-91.2)<10 && dRll>0.3) SelTagList.emplace_back("_ZWin20");
-
-    for (const auto &selTag: SelTagList) {
-        if (fire_iso) {
-            FillHist("TrigEff_Iso"+selTag, 0., weight, 1., 0., 1);
-            FillHist("TrigEff_Iso_DZ1"+selTag, fabs(mu1.dZ()), weight, 40, 0., 0.4);
-            FillHist("TrigEff_Iso_DZ2"+selTag, fabs(mu2.dZ()), weight, 40, 0., 0.4);
-            FillHist("TrigEff_Iso_DZ"+selTag, fabs(mu1.dZ()-mu2.dZ()), weight, 40, 0., 0.4);
-        }
-        if (fire_isoDZ) {
-            FillHist("TrigEff_IsoDZ"+selTag, 0., weight, 1., 0., 1);
-            FillHist("TrigEff_IsoDZ_DZ1"+selTag, fabs(mu1.dZ()), weight, 40, 0., 0.4);
-            FillHist("TrigEff_IsoDZ_DZ2"+selTag, fabs(mu2.dZ()), weight, 40, 0., 0.4);
-            FillHist("TrigEff_IsoDZ_DZ"+selTag, fabs(mu1.dZ()-mu2.dZ()), weight, 40, 0., 0.4);
-        }
-        if (fire_DZ) FillHist("TrigEff_DZ"+selTag, 0., weight, 1., 0., 1.);
-        if (fire_isoDZM) FillHist("TrigEff_IsoDZM"+selTag, 0., weight, 1., 0., 1.);
-        if (fire_isoM) {
-            FillHist("TrigEff_IsoM"+selTag, 0., weight, 1., 0., 1);
-            FillHist("TrigEff_IsoM_DZ1"+selTag, fabs(mu1.dZ()), weight, 40, 0., 0.4);
-            FillHist("TrigEff_IsoM_DZ2"+selTag, fabs(mu2.dZ()), weight, 40, 0., 0.4);
-            FillHist("TrigEff_IsoM_DZ"+selTag, fabs(mu1.dZ()-mu2.dZ()), weight, 40, 0., 0.4);
-        }
-        if (fire_DZM) FillHist("TrigEff_DZM"+selTag, 0., weight, 1., 0., 1.);
-        if (fire_M) FillHist("TrigEff_M"+selTag, 0., weight, 1., 0., 1.);
-    }
+    // Fill DZ + DZM first before the mass cut
     if (fire_DZ) {
+        FillHist("TrigEff_DZ", 0., weight, 1., 0., 1.);
         FillHist("TrigEff_DZ_MllNearCut", Mll, weight, 100, 0., 10.);
         FillHist("TrigEff_DZ_Mll", Mll, weight, 19, 10., 200.);
         if (fire_DZM) {
+            FillHist("TrigEff_DZM", 0., weight, 1., 0., 1.);
             FillHist("TrigEff_DZM_MllNearCut", Mll, weight, 100, 0., 10.);
             FillHist("TrigEff_DZM_Mll", Mll, weight, 19, 10., 200.);
         }
     }
+
+    if (! (fabs(Mll-91.2) < 10.)) return;
+    if (! (dRll > 0.3)) return;
+    if (fire_iso) {
+        FillHist("TrigEff_Iso", 0., weight, 1., 0., 1);
+        FillHist("TrigEff_Iso_DZ1", fabs(mu1.dZ()), weight, 40, 0., 0.4);
+        FillHist("TrigEff_Iso_DZ2", fabs(mu2.dZ()), weight, 40, 0., 0.4);
+        FillHist("TrigEff_Iso_DZ", fabs(mu1.dZ()-mu2.dZ()), weight, 40, 0., 0.4);
+    }
+    if (fire_isoDZ) {
+        FillHist("TrigEff_IsoDZ", 0., weight, 1., 0., 1);
+        FillHist("TrigEff_IsoDZ_DZ1", fabs(mu1.dZ()), weight, 40, 0., 0.4);
+        FillHist("TrigEff_IsoDZ_DZ2", fabs(mu2.dZ()), weight, 40, 0., 0.4);
+        FillHist("TrigEff_IsoDZ_DZ", fabs(mu1.dZ()-mu2.dZ()), weight, 40, 0., 0.4);
+    }
+    if (fire_DZ) FillHist("TrigEff_DZ", 0., weight, 1., 0., 1.);
+    if (fire_isoDZM) FillHist("TrigEff_IsoDZM", 0., weight, 1., 0., 1.);
+    if (fire_isoM) {
+        FillHist("TrigEff_IsoM", 0., weight, 1., 0., 1);
+        FillHist("TrigEff_IsoM_DZ1", fabs(mu1.dZ()), weight, 40, 0., 0.4);
+        FillHist("TrigEff_IsoM_DZ2", fabs(mu2.dZ()), weight, 40, 0., 0.4);
+        FillHist("TrigEff_IsoM_DZ", fabs(mu1.dZ()-mu2.dZ()), weight, 40, 0., 0.4);
+    }
+    if (fire_DZM) FillHist("TrigEff_DZM", 0., weight, 1., 0., 1.);
+    if (fire_M) FillHist("TrigEff_M", 0., weight, 1., 0., 1.);
 }
 

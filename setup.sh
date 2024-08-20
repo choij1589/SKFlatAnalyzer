@@ -1,10 +1,16 @@
 RELEASE="`cat /etc/redhat-release`"
-if [[ $HOSTNAME == *"tamsa"* ]]; then
-  echo "@@@@ Working in tamsa"
+echo "@@@@ Working in $HOSTNAME"
+if [[ $HOSTNAME == *"ai-tamsa"* ]]; then
   export SKFlat_WD="/data6/Users/$USER/SKFlatAnalyzer"
   export SKFlatRunlogDir="/gv0/Users/$USER/SKFlatRunlog"
   export SKFlatOutputDir="/gv0/Users/$USER/SKFlatOutput"
-
+  # root configuration
+  source ~/.conda-activate
+  conda activate pyg
+elif [[ $HOSTNAME == *"tamsa"* ]]; then
+  export SKFlat_WD="/data6/Users/$USER/SKFlatAnalyzer"
+  export SKFlatRunlogDir="/gv0/Users/$USER/SKFlatRunlog"
+  export SKFlatOutputDir="/gv0/Users/$USER/SKFlatOutput"
   # root configuration
   # Singlarity image
   if [[ $RELEASE == *"Alma"* ]]; then
@@ -16,7 +22,6 @@ if [[ $HOSTNAME == *"tamsa"* ]]; then
     source /cvmfs/sft.cern.ch/lcg/views/LCG_104/x86_64-centos7-gcc11-opt/setup.sh
   fi
 elif [[ $HOSTNAME == *"cms"* ]]; then
-  echo "@@@@ Working in cms"
   export SKFlat_WD="/data6/Users/$USER/SKFlatAnalyzer"
   export SKFlatRunlogDir="/data6/Users/$USER/SKFlatRunlog"
   export SKFlatOutputDir="/data6/Users/$USER/SKFlatOutput"
