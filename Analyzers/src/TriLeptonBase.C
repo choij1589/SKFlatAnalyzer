@@ -1,27 +1,6 @@
 #include "TriLeptonBase.h"
 
 TriLeptonBase::TriLeptonBase() {}
-TriLeptonBase::~TriLeptonBase() {
-    delete hMuonIDSF;
-    delete hMu17Leg1_Data;
-    delete hMu17Leg1_MC;
-    delete hMu8Leg2_Data;
-    delete hMu8Leg2_MC;
-    delete hMuFR_Central;
-    delete hMuFR_PromptNormUp;
-    delete hMuFR_PromptNormDown;
-    delete hMuFR_MotherJetPtUp;
-    delete hMuFR_MotherJetPtDown;
-    delete hMuFR_RequireHeavyTag;
-    delete hMuFR_MC;
-    delete hElFR_Central;
-    delete hElFR_PromptNormUp;
-    delete hElFR_PromptNormDown;
-    delete hElFR_MotherJetPtUp;
-    delete hElFR_MotherJetPtDown;
-    delete hElFR_RequireHeavyTag;
-    delete hElFR_MC;
-}
 
 void TriLeptonBase::initializeAnalyzer() {
     // flags
@@ -99,32 +78,46 @@ void TriLeptonBase::initializeAnalyzer() {
     hMuonIDSF = (TH2D*)fMuonID->Get("sf");  hMuonIDSF->SetDirectory(0);
     fMuonID->Close();
 
-    // muon trigger legs
-    TFile *fMu17Leg1 = new TFile(muonIDpath+"/efficiency_Mu17Leg1.root");
-    hMu17Leg1_Data = (TH2D*)fMu17Leg1->Get("data"); hMu17Leg1_Data->SetDirectory(0);
-    hMu17Leg1_MC = (TH2D*)fMu17Leg1->Get("sim");    hMu17Leg1_MC->SetDirectory(0);
-    fMu17Leg1->Close();
-
-    TFile* fMu8Leg2 = new TFile(muonIDpath+"/efficiency_Mu8Leg2.root");
-    hMu8Leg2_Data = (TH2D*)fMu8Leg2->Get("data"); hMu8Leg2_Data->SetDirectory(0);
-    hMu8Leg2_MC = (TH2D*)fMu8Leg2->Get("sim");    hMu8Leg2_MC->SetDirectory(0);
-    fMu8Leg2->Close();
-
     // ele ID
     TString eleIDPath = datapath + "/" + GetEra() + "/ID/Electron";
     TFile *fEleID = new TFile(eleIDPath+"/efficiency_TopHNT.root");
     hElIDSF = (TH2D*)fEleID->Get("sf"); hElIDSF->SetDirectory(0);
     fEleID->Close();
 
-    TFile *fEl23Leg1 = new TFile(eleIDPath+"/efficiency_El23Leg1.root");
-    hEl23Leg1_Data = (TH2D*)fEl23Leg1->Get("data"); hEl23Leg1_Data->SetDirectory(0);
-    hEl23Leg1_MC = (TH2D*)fEl23Leg1->Get("sim");    hEl23Leg1_MC->SetDirectory(0);
-    fEl23Leg1->Close();
+    if (Skim3Mu) {
+        // dimuon trigger legs
+        TFile *fMu17Leg = new TFile(muonIDpath+"/efficiency_Mu17Leg1.root");
+        hMu17Leg_Data = (TH2D*)fMu17Leg->Get("data"); hMu17Leg_Data->SetDirectory(0);
+        hMu17Leg_MC = (TH2D*)fMu17Leg->Get("sim");    hMu17Leg_MC->SetDirectory(0);
+        fMu17Leg->Close();
 
-    TFile *fEl12Leg2 = new TFile(eleIDPath+"/efficiency_El12Leg2.root");
-    hEl12Leg2_Data = (TH2D*)fEl12Leg2->Get("data"); hEl12Leg2_Data->SetDirectory(0);
-    hEl12Leg2_MC = (TH2D*)fEl12Leg2->Get("sim");    hEl12Leg2_MC->SetDirectory(0);
-    fEl12Leg2->Close();
+        TFile* fMu8Leg = new TFile(muonIDpath+"/efficiency_Mu8Leg2.root");
+        hMu8Leg_Data = (TH2D*)fMu8Leg->Get("data"); hMu8Leg_Data->SetDirectory(0);
+        hMu8Leg_MC = (TH2D*)fMu8Leg->Get("sim");    hMu8Leg_MC->SetDirectory(0);
+        fMu8Leg->Close();
+    }
+    if (Skim1E2Mu) {
+        // emu trigger legs
+        TFile *fMu23Leg = new TFile(muonIDpath+"/efficiency_Mu23El12_Mu23Leg.root");
+        hMu23Leg_Data = (TH2D*)fMu23Leg->Get("Mu23El12_Data"); hMu23Leg_Data->SetDirectory(0);
+        hMu23Leg_MC = (TH2D*)fMu23Leg->Get("Mu23El12_MC");     hMu23Leg_MC->SetDirectory(0);
+        fMu23Leg->Close();
+
+        TFile *fMu8Leg = new TFile(muonIDpath+"/efficiency_Mu8El23_Mu8Leg.root");
+        hMu8Leg_Data = (TH2D*)fMu8Leg->Get("Mu8El23_Data"); hMu8Leg_Data->SetDirectory(0);
+        hMu8Leg_MC = (TH2D*)fMu8Leg->Get("Mu8El23_MC");     hMu8Leg_MC->SetDirectory(0);
+        fMu8Leg->Close();
+    
+        TFile *fEl23Leg = new TFile(eleIDPath+"/efficiency_Mu8El23_El23Leg.root");
+        hEl23Leg_Data = (TH2D*)fEl23Leg->Get("Mu8El23_Data"); hEl23Leg_Data->SetDirectory(0);
+        hEl23Leg_MC = (TH2D*)fEl23Leg->Get("Mu8El23_MC");     hEl23Leg_MC->SetDirectory(0);
+        fEl23Leg->Close();
+
+        TFile *fEl12Leg = new TFile(eleIDPath+"/efficiency_Mu23El12_El12Leg.root");
+        hEl12Leg_Data = (TH2D*)fEl12Leg->Get("Mu23El12_Data"); hEl12Leg_Data->SetDirectory(0);
+        hEl12Leg_MC = (TH2D*)fEl12Leg->Get("Mu23El12_MC");     hEl12Leg_MC->SetDirectory(0);
+        fEl12Leg->Close();
+    }
 
     // muon fake rate
     // data driven fake rates
@@ -504,75 +497,75 @@ double TriLeptonBase::getEleIDSF(const Electron &ele, int sys) {
     return value + float(sys)*error;
 }
 
-
-double TriLeptonBase::getTriggerEff(const Muon &mu, TString histkey, bool isDataEff, int sys) {
+double TriLeptonBase::getTriggerEff(const Muon &mu, TString histkey, bool isDATA, int sys) {
     TH2D *h = nullptr;
     double pt = mu.Pt();
     double eta = fabs(mu.Eta());
-    if (histkey == "Mu17Leg1" && isDataEff) {
-        h = hMu17Leg1_Data;
+    if (histkey == "Mu23Leg" && isDATA) {
+        h = hMu23Leg_Data;
+        if (pt < 25.) pt = 25.;
+        if (pt >= 200.) pt = 199.;
+        if (eta > 2.4) eta = 2.39;
+    } else if (histkey == "Mu23Leg" && (!isDATA)) {
+        h = hMu23Leg_MC;
+        if (pt < 25.) pt = 25.;
+        if (pt >= 200.) pt = 199.;
+        if (eta > 2.4) eta = 2.39;
+    } else if (histkey == "Mu17Leg" && isDATA) {
+        h = hMu17Leg_Data;
         if (pt < 20.) pt = 20.;
-        if (pt > 200.) pt = 199.;
+        if (pt >= 200.) pt = 199.;
         if (eta > 2.4) eta = 2.39;
-    }
-    else if (histkey == "Mu17Leg1" && (!isDataEff)) {
-        h = hMu17Leg1_MC;
+    } else if (histkey == "Mu17Leg" && (!isDATA)) {
+        h = hMu17Leg_MC;
         if (pt < 20.) pt = 20.;
-        if (pt > 200.) pt = 199.;
+        if (pt >= 200.) pt = 199.;
         if (eta > 2.4) eta = 2.39;
-    }
-    else if (histkey == "Mu8Leg2" && isDataEff) {
-        h = hMu8Leg2_Data;
+    } else if (histkey == "Mu8Leg" && isDATA) {
+        h = hMu8Leg_Data;
         if (pt < 10.) pt = 10.;
-        if (pt > 200.) pt = 199.;
+        if (pt >= 200.) pt = 199.;
         if (eta > 2.4) eta = 2.39;
-    }
-    else if (histkey == "Mu8Leg2" && (!isDataEff)) {
-        h = hMu8Leg2_MC;
+    } else if (histkey == "Mu8Leg" && (!isDATA)) {
+        h = hMu8Leg_MC;
         if (pt < 10.) pt = 10.;
-        if (pt > 200.) pt = 199.;
+        if (pt >= 200.) pt = 199.;
         if (eta > 2.4) eta = 2.39;
-    }
-    else {
+    } else {
         cerr << "[TriLeptonBase::getTriggerEff] Wrong combination of histkey and isDataEff" << endl;
         cerr << "[TriLeptonBase::getTriggerEff] histkey = " << histkey << endl;
-        cerr << "[TriLeptonBase::getTriggerEff] isDataEff = " << isDataEff << endl;
+        cerr << "[TriLeptonBase::getTriggerEff] isDATA = " << isDATA << endl;
     }
 
     int thisBin = h->FindBin(eta, pt);
     double value = h->GetBinContent(thisBin);
     double error = h->GetBinError(thisBin);
 
-    return value + int(sys)*error;
+    return value + float(sys)*error;
 }
 
 double TriLeptonBase::getTriggerEff(const Electron &ele, TString histkey, bool isDATA, int sys) {
     TH2D *h = nullptr;
     double pt = ele.Pt();
-    double eta = ele.scEta();
-    if (eta < -2.5) eta = -2.499;
+    double eta = fabs(ele.scEta());
     if (eta >= 2.5) eta = 2.499;
-    if (histkey == "El23Leg1" && isDATA) {
-        h = hEl23Leg1_Data;
+    if (histkey == "El23Leg" && isDATA) {
+        h = hEl23Leg_Data;
         if (pt < 25.) pt = 25.;
         if (pt >= 200.) pt = 199.;
-    }
-    else if (histkey == "El23Leg1" && (!isDATA)) {
-        h = hEl23Leg1_MC;
+    } else if (histkey == "El23Leg" && (!isDATA)) {
+        h = hEl23Leg_MC;
         if (pt < 25.) pt = 25.;
         if (pt > 200.) pt = 199.;
-    }
-    else if (histkey == "El12Leg2" && isDATA) {
-        h = hEl12Leg2_Data;
+    } else if (histkey == "El12Leg" && isDATA) {
+        h = hEl12Leg_Data;
         if (pt < 15.) pt = 15.;
         if (pt > 200.) pt = 199.;
-    }
-    else if (histkey == "El12Leg2" && (!isDATA)) {
-        h = hEl12Leg2_MC;
+    } else if (histkey == "El12Leg" && (!isDATA)) {
+        h = hEl12Leg_MC;
         if (pt < 15.) pt = 15.;
         if (pt > 200.) pt = 199.;
-    }
-    else {
+    } else {
         cerr << "[TriLeptonBase::getTriggerEff] Wrong combination of histkey and isDataEff" << endl;
         cerr << "[TriLeptonBase::getTriggerEff] histkey = " << histkey << endl;
         cerr << "[TriLeptonBase::getTriggerEff] isDATA = " << isDATA << endl;
@@ -582,6 +575,36 @@ double TriLeptonBase::getTriggerEff(const Electron &ele, TString histkey, bool i
     double error = h->GetBinError(thisBin);
 
     return value + float(sys)*error;
+}
+
+double TriLeptonBase::getPairwiseFilterEff(TString filter, bool isDATA) {
+    double eff = -999.;
+    if (filter.Contains("DiMu")) {
+        if (DataEra == "2016postVFP") {
+            eff = isDATA ? 0.9798 : 0.9968;
+        } else if (DataEra == "2017") {
+            eff = isDATA ? 0.9961 :0.9958;
+        } else if (DataEra == "2018") {
+            eff = isDATA ? 0.9988 : 0.9998;
+        } else {
+            eff = 1.;
+        }
+    } else if (filter.Contains("EMu")) {
+        if (DataEra == "2016postVFP") {
+            eff = isDATA ? 0.9638 : 0.9878;
+        } else if (DataEra == "2017") {
+            eff = isDATA ? 0.9989 : 0.9955;
+        } else if (DataEra == "2018") {
+            eff = isDATA ? 0.9946 : 0.9981;
+        } else {
+            eff = 1.;
+        }
+    } else {
+        cerr << "[DiLeptonBase::getPairwiseFilterEfficiency] Wrong filter " << filter << endl;
+        exit(EXIT_FAILURE);
+    }
+
+    return eff;
 }
 
 double TriLeptonBase::getDblMuTriggerEff(vector<Muon> &muons, bool isDATA, int sys) {
@@ -596,18 +619,19 @@ double TriLeptonBase::getDblMuTriggerEff(vector<Muon> &muons, bool isDATA, int s
     Muon &mu3 = muons.at(2);
 
 
-    double case1 = getTriggerEff(mu1, "Mu17Leg1", isDATA, sys);
-           case1 *= getTriggerEff(mu2, "Mu8Leg2", isDATA, sys);
-    double case2 = 1. - getTriggerEff(mu1, "Mu17Leg1", isDATA, sys);
-           case2 *= getTriggerEff(mu2, "Mu17Leg1", isDATA, sys);
-           case2 *= getTriggerEff(mu3, "Mu8Leg2", isDATA, sys);
-    double case3 = getTriggerEff(mu1, "Mu17Leg1", isDATA, sys);
-           case3 *= 1. - getTriggerEff(mu2, "Mu8Leg2", isDATA, sys);
-           case3 *= getTriggerEff(mu3, "Mu8Leg2", isDATA, sys);
+    double case1 = getTriggerEff(mu1, "Mu17Leg", isDATA, sys);
+           case1 *= getTriggerEff(mu2, "Mu8Leg", isDATA, sys);
+           case1 *= getPairwiseFilterEff("DiMu", isDATA);
+    double case2 = 1. - getTriggerEff(mu1, "Mu17Leg", isDATA, sys);
+           case2 *= getTriggerEff(mu2, "Mu17Leg", isDATA, sys);
+           case2 *= getTriggerEff(mu3, "Mu8Leg", isDATA, sys);
+           case2 *= getPairwiseFilterEff("DiMu", isDATA);
+    double case3 = getTriggerEff(mu1, "Mu17Leg", isDATA, sys);
+           case3 *= (1. - getTriggerEff(mu2, "Mu8Leg", isDATA, sys))*getPairwiseFilterEff("DiMu", isDATA);
+           case3 *= getTriggerEff(mu3, "Mu8Leg", isDATA, sys)*getPairwiseFilterEff("DiMu", isDATA);
     return case1 + case2 + case3;
 }
 
-// WARNING: Mu23 leg is not measured! Temporarily use Mu17 leg
 double TriLeptonBase::getEMuTriggerEff(vector<Electron> &electrons, vector<Muon> &muons, bool isDATA, int sys) {
     // check no. of electrons and muons
     if (! (electrons.size() == 1 && muons.size() == 2)) {
@@ -619,37 +643,13 @@ double TriLeptonBase::getEMuTriggerEff(vector<Electron> &electrons, vector<Muon>
     Muon     &mu1 = muons.at(0);
     Muon     &mu2 = muons.at(1);
 
-    double case1 = getTriggerEff(mu1, "Mu8Leg2", isDATA, sys) + (1.-getTriggerEff(mu1, "Mu8Leg2", isDATA, sys)*getDZEfficiency("EMu", isDATA))*getTriggerEff(mu2, "Mu8Leg2", isDATA, sys);
-    double case2 = mu2.Pt() > 25. ? getTriggerEff(mu1, "Mu17Leg1", isDATA, sys) + (1.-getTriggerEff(mu1, "Mu17Leg1", isDATA, sys)*getDZEfficiency("EMu", isDATA))*getTriggerEff(mu2, "Mu17Leg1", isDATA, sys) 
-                                  : getTriggerEff(mu1, "Mu17Leg1", isDATA, sys); 
+    double case1 = getTriggerEff(mu1, "Mu8Leg", isDATA, sys) + (1.-getTriggerEff(mu1, "Mu8Leg", isDATA, sys)*getPairwiseFilterEff("EMu", isDATA))*getTriggerEff(mu2, "Mu8Leg", isDATA, sys);
+    double case2 = mu2.Pt() > 25. ? getTriggerEff(mu1, "Mu23Leg", isDATA, sys) + (1.-getTriggerEff(mu1, "Mu23Leg", isDATA, sys)*getPairwiseFilterEff("EMu", isDATA))*getTriggerEff(mu2, "Mu23Leg", isDATA, sys) 
+                                  : getTriggerEff(mu1, "Mu23Leg", isDATA, sys); 
 
-    double eff_el = (mu1.Pt() > 25. || mu2.Pt() > 25.) ? getTriggerEff(ele, "El12Leg2", isDATA, sys) : getTriggerEff(ele, "El23Leg1", isDATA, sys);
+    double eff_el = (mu1.Pt() > 25. || mu2.Pt() > 25.) ? getTriggerEff(ele, "El12Leg", isDATA, sys) : getTriggerEff(ele, "El23Leg", isDATA, sys);
     double eff_mu = (ele.Pt() > 25.) ? case1 : case2;
-    return eff_el * eff_mu;
-}
-
-double TriLeptonBase::getDZEfficiency(TString SFKey, bool isDATA) {
-    double eff = 0.;
-    if (SFKey.Contains("DiMu")) {
-        if (DataEra == "2016postVFP") eff = isDATA ? 0.9798 : 0.9969;
-        else if (DataEra == "2017")   eff = 0.9958;
-        else                          eff = 1.;
-    }
-    else if (SFKey.Contains("DiElIso")) {
-        if (DataEra=="2016preVFP")       eff = 0.986;
-        else if (DataEra=="2016postVFP") eff = 0.980;
-        else                             eff = 1.;
-    }
-    else if (SFKey.Contains("EMu")){
-        if(DataEra=="2016postVFP") eff = isDATA ? 0.9648:0.9882;
-        //else if(DataEra=="2017"  ) Eff = 0.9951; //for now included in muleg
-        else                       eff = 1.;
-    }
-    else {
-        eff = 1.;
-    }
-
-    return eff;
+    return eff_el * eff_mu * getPairwiseFilterEff("EMu", isDATA);
 }
 
 double TriLeptonBase::getDblMuTriggerSF(vector<Muon> &muons, int sys) {
@@ -729,4 +729,37 @@ double TriLeptonBase::getFakeWeight(const vector<Muon> &muons, const vector<Elec
         weight *= -1.*(fr / (1.-fr));
     }
     return weight;
+}
+
+TriLeptonBase::~TriLeptonBase() {
+    if (Skim1E2Mu) {
+        delete hMu23Leg_Data;
+        delete hMu23Leg_MC;
+        delete hMu8Leg_Data;
+        delete hMu8Leg_MC;
+        delete hMuonIDSF;
+        delete hElIDSF;
+    }
+    if (Skim3Mu) {
+        delete hMu17Leg_Data;
+        delete hMu17Leg_MC;
+        delete hMu8Leg_Data;
+        delete hMu8Leg_MC;
+        delete hMuonIDSF;
+        delete hElIDSF;
+    }
+    delete hMuFR_Central;
+    delete hMuFR_PromptNormUp;
+    delete hMuFR_PromptNormDown;
+    delete hMuFR_MotherJetPtUp;
+    delete hMuFR_MotherJetPtDown;
+    delete hMuFR_RequireHeavyTag;
+    delete hMuFR_MC;
+    delete hElFR_Central;
+    delete hElFR_PromptNormUp;
+    delete hElFR_PromptNormDown;
+    delete hElFR_MotherJetPtUp;
+    delete hElFR_MotherJetPtDown;
+    delete hElFR_RequireHeavyTag;
+    delete hElFR_MC;
 }

@@ -14,12 +14,15 @@ public:
     vector<TString> DblMuTriggers, EMuTriggers;
     vector<TString> MASSPOINTs;
 
+    // Trigger Leg Efficiencies
+    TH2D *hMu23Leg_Data, *hMu23Leg_MC;
+    TH2D *hMu17Leg_Data, *hMu17Leg_MC;
+    TH2D *hMu8Leg_Data, *hMu8Leg_MC;
+    TH2D *hEl23Leg_Data, *hEl23Leg_MC;
+    TH2D *hEl12Leg_Data, *hEl12Leg_MC;
+    // ID SF
     TH2D *hMuonIDSF;
-    TH2D *hMu17Leg1_Data, *hMu17Leg1_MC;
-    TH2D *hMu8Leg2_Data, *hMu8Leg2_MC;
     TH2D *hElIDSF;
-    TH2D *hEl23Leg1_Data, *hEl23Leg1_MC;
-    TH2D *hEl12Leg2_Data, *hEl12Leg2_MC;
     TH2D *hMuFR_Central, *hMuFR_PromptNormUp, *hMuFR_PromptNormDown, *hMuFR_MotherJetPtUp, *hMuFR_MotherJetPtDown, *hMuFR_RequireHeavyTag, *hMuFR_MC;
     TH2D *hElFR_Central, *hElFR_PromptNormUp, *hElFR_PromptNormDown, *hElFR_MotherJetPtUp, *hElFR_MotherJetPtDown, *hElFR_RequireHeavyTag, *hElFR_MC;
 
@@ -37,7 +40,7 @@ public:
     double getDblMuTriggerSF(vector<Muon> &muons, int sys);
     double getEMuTriggerEff(vector<Electron> &electrons, vector<Muon> &muons, bool isDATA, int sys);
     double getEMuTriggerSF(vector<Electron> &electrons, vector<Muon> &muons, int sys);
-    double getDZEfficiency(TString SFkey, bool isDATA);
+    double getPairwiseFilterEff(TString filter, bool isDATA);
     double getMuonFakeProb(const Muon &mu, const TString &syst);
     double getElectronFakeProb(const Electron &ele, const TString &syst);
     double getFakeWeight(const vector<Muon> &muons, const vector<Electron> &electrons, const TString &syst);

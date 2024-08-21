@@ -123,17 +123,6 @@ void DiLeptonBase::initializeAnalyzer() {
         fEl12Leg->Close();
     }
 
-    // electron trigger legs
-    //TFile *fEl23Leg1 = new TFile(eleIDPath+"/efficiency_El23Leg1.root");
-    //hEl23Leg1_Data = (TH2D*)fEl23Leg1->Get("data"); hEl23Leg1_Data->SetDirectory(0);
-    //hEl23Leg1_MC = (TH2D*)fEl23Leg1->Get("sim");    hEl23Leg1_MC->SetDirectory(0);
-    //fEl23Leg1->Close();
-
-    //TFile *fEl12Leg2 = new TFile(eleIDPath+"/efficiency_El12Leg2.root");
-    //hEl12Leg2_Data = (TH2D*)fEl12Leg2->Get("data"); hEl12Leg2_Data->SetDirectory(0);
-    //hEl12Leg2_MC = (TH2D*)fEl12Leg2->Get("sim");    hEl12Leg2_MC->SetDirectory(0);
-    //fEl12Leg2->Close();
-
     // NPV distributions
     TString PUPath = datapath + "/" + GetEra() + "/PileUp";
     if (MeasFakeMu8 || MeasFakeMu17) {
@@ -390,8 +379,7 @@ double DiLeptonBase::getTriggerEff(const Muon &mu, TString histkey, bool isDATA,
 double DiLeptonBase::getTriggerEff(const Electron &ele, TString histkey, bool isDATA, int sys) {
     TH2D *h = nullptr;
     double pt = ele.Pt();
-    double eta = ele.scEta();
-    if (eta < -2.5) eta = -2.499;
+    double eta = fabs(ele.scEta());
     if (eta >= 2.5) eta = 2.499;
     if (histkey == "El23Leg" && isDATA) {
         h = hEl23Leg_Data;
@@ -431,7 +419,7 @@ double DiLeptonBase::getDblMuTriggerEff(vector<Muon> &muons, bool isDATA, int sy
     Muon &mu1 = muons.at(0);
     Muon &mu2 = muons.at(1);
 
-    return getTriggerEff(mu1, "Mu17Leg1", isDATA, sys) * getTriggerEff(mu2, "Mu8Leg2", isDATA, sys);
+    return getTriggerEff(mu1, "Mu17Leg", isDATA, sys) * getTriggerEff(mu2, "Mu8Leg", isDATA, sys) * getPairwiseFilterEff("DiMu", isDATA);
 }
 
 // WARNING: Mu 23 leg is not measured! Temporarily use Mu17 leg
@@ -447,28 +435,34 @@ double DiLeptonBase::getEMuTriggerEff(vector<Electron> &electrons, vector<Muon> 
     double eff_el, eff_mu;
     eff_el = mu.Pt() > 25. ? getTriggerEff(ele, "El12Leg", isDATA, sys) : getTriggerEff(ele, "El23Leg", isDATA, sys);
     eff_mu = ele.Pt() > 25. ? getTriggerEff(mu, "Mu8Leg", isDATA, sys) : getTriggerEff(mu, "Mu23Leg", isDATA, sys);
-    return eff_el * eff_mu;
+    return eff_el * eff_mu * getPairwiseFilterEff("EMu", isDATA);
 }
 
-double DiLeptonBase::getDZEfficiency(TString SFKey, bool isDATA) {
-    double eff = 0.;
-    if (SFKey.Contains("DiMu")) {
-        if (DataEra == "2016postVFP") eff = isDATA ? 0.9798 : 0.9969;
-        else if (DataEra == "2017")   eff = 0.9958;
-        else                          eff = 1.;
-    }
-    else if (SFKey.Contains("DiElIso")) {
-        if (DataEra=="2016preVFP")       eff = 0.986;
-        else if (DataEra=="2016postVFP") eff = 0.980;
-        else                             eff = 1.;
-    }
-    else if (SFKey.Contains("EMu")){
-        if(DataEra=="2016postVFP") eff = isDATA ? 0.9648:0.9882;
-        //else if(DataEra=="2017"  ) Eff = 0.9951; //for now included in muleg
-        else                       eff = 1.;
-    }
-    else {
-        eff = 1.;
+double DiLeptonBase::getPairwiseFilterEff(TString filter, bool isDATA) {
+    double eff = -999.;
+    if (filter.Contains("DiMu")) {
+        if (DataEra == "2016postVFP") {
+            eff = isDATA ? 0.9798 : 0.9968;
+        } else if (DataEra == "2017") {
+            eff = isDATA ? 0.9961 :0.9958;
+        } else if (DataEra == "2018") {
+            eff = isDATA ? 0.9988 : 0.9998;
+        } else {
+            eff = 1.;
+        }
+    } else if (filter.Contains("EMu")) {
+        if (DataEra == "2016postVFP") {
+            eff = isDATA ? 0.9638 : 0.9878;
+        } else if (DataEra == "2017") {
+            eff = isDATA ? 0.9989 : 0.9955;
+        } else if (DataEra == "2018") {
+            eff = isDATA ? 0.9946 : 0.9981;
+        } else {
+            eff = 1.;
+        }
+    } else {
+        cerr << "[DiLeptonBase::getPairwiseFilterEfficiency] Wrong filter " << filter << endl;
+        exit(EXIT_FAILURE);
     }
 
     return eff;
@@ -525,17 +519,25 @@ double DiLeptonBase::getNPVReweight(unsigned int NPV, TString &path) {
 
 
 DiLeptonBase::~DiLeptonBase() {
-    delete hMuonIDSF;
-    delete hMu23Leg_Data;
-    delete hMu23Leg_MC;
-    delete hMu17Leg_Data;
-    delete hMu17Leg_MC;
-    delete hMu8Leg_Data;
-    delete hMu8Leg_MC;
-    delete hEl23Leg_Data;
-    delete hEl23Leg_MC;
-    delete hEl12Leg_Data;
-    delete hEl12Leg_MC;
+    if (RunEMu) {
+        delete hMuonIDSF;
+        delete hElIDSF;
+        delete hMu23Leg_Data;
+        delete hMu23Leg_MC;
+        delete hMu8Leg_Data;
+        delete hMu8Leg_MC;
+        delete hEl23Leg_Data;
+        delete hEl23Leg_MC;
+        delete hEl12Leg_Data;
+        delete hEl12Leg_MC;
+    }
+    if (RunDiMu) {
+        delete hMuonIDSF;
+        delete hMu17Leg_Data;
+        delete hMu17Leg_MC;
+        delete hMu8Leg_Data;
+        delete hMu8Leg_MC;
+    }
     if (MeasFakeMu8 || MeasFakeMu17) {
         delete hNPVMu8_Data;
         delete hNPVMu17_Data;

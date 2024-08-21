@@ -4,7 +4,6 @@ from ROOT import TString
 from ROOT.std import vector
 from ROOT.JetTagging import Parameters as jParameters
 from ROOT import Muon, Electron, Jet
-gSystem.Load("/cvmfs/cms.cern.ch/slc7_amd64_gcc900/external/lhapdf/6.2.3/lib/libLHAPDF.so")
 
 class ClosDiLepTrigs(DiLeptonBase):
     def __init__(self):
@@ -34,6 +33,7 @@ class ClosDiLepTrigs(DiLeptonBase):
         # Central scale
         vetoMuons, tightMuons, vetoElectrons, tightElectrons, jets, bjets = self.defineObjects(rawMuons, rawElectrons, rawJets)
         channel = self.selectEvent(ev, vetoMuons, tightMuons, vetoElectrons, tightElectrons, jets, bjets, METv)
+        if channel is None: return None
         
         objects = {"muons": tightMuons,
                    "electrons": tightElectrons,
@@ -107,11 +107,6 @@ class ClosDiLepTrigs(DiLeptonBase):
             w_pileup = super().GetPileUpWeight(super().nPileUp, 0)
             weight *= w_prefire            # print(f"w_prefire: {w_prefire}")
             weight *= w_pileup  
-             
-            w_topptweight = 1.
-            if "TTLL" in super().MCSample or "TTLJ" in super().MCSample:
-                w_topptweight = super().mcCorr.GetTopPtReweight(truth)
-            weight *= w_topptweight
 
         return weight
     
@@ -126,15 +121,13 @@ class ClosDiLepTrigs(DiLeptonBase):
         trigWeightUp = 1.
         trigWeightDown = 1.
         if channel == "RunDiMu":
-            effDZ = self.getDZEfficiency(channel, isDATA=False)
-            trigWeight = self.getDblMuTriggerEff(muons, False, 0) * effDZ
-            trigWeightUp = self.getDblMuTriggerEff(muons, False, 1) * effDZ
-            trigWeightDown = self.getDblMuTriggerEff(muons, False, -1) * effDZ
+            trigWeight = self.getDblMuTriggerEff(muons, False, 0) 
+            trigWeightUp = self.getDblMuTriggerEff(muons, False, 1) 
+            trigWeightDown = self.getDblMuTriggerEff(muons, False, -1) 
         elif channel == "RunEMu":
-            effDZ = self.getDZEfficiency(channel, isDATA=False)
-            trigWeight = self.getEMuTriggerEff(electrons, muons, False, 0) * effDZ
-            trigWeightUp = self.getEMuTriggerEff(electrons, muons, False, 1) * effDZ
-            trigWeightDown = self.getEMuTriggerEff(electrons, muons, False, -1) * effDZ 
+            trigWeight = self.getEMuTriggerEff(electrons, muons, False, 0) 
+            trigWeightUp = self.getEMuTriggerEff(electrons, muons, False, 1) 
+            trigWeightDown = self.getEMuTriggerEff(electrons, muons, False, -1)
         else:
             print(f"Wrong channel {channel}")
             exit(1)

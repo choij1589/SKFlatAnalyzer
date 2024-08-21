@@ -16,7 +16,6 @@ public:
     TString isoMuTriggerName;
     double triggerSafePtCut;
 
-    TH2D *hMuonIDSF;
     // Trigger Leg Efficiencies
     TH2D *hMu23Leg_Data, *hMu23Leg_MC;
     TH2D *hMu17Leg_Data, *hMu17Leg_MC;
@@ -24,6 +23,7 @@ public:
     TH2D *hEl23Leg_Data, *hEl23Leg_MC;
     TH2D *hEl12Leg_Data, *hEl12Leg_MC;
     // ID SF
+    TH2D *hMuonIDSF;
     TH2D *hElIDSF;
     //TH2D *hEl23Leg1_Data, *hEl23Leg1_MC;
     //TH2D *hEl12Leg2_Data, *hEl12Leg2_MC;
@@ -46,7 +46,8 @@ public:
     double getDblMuTriggerSF(vector<Muon> &muons, int sys);
     double getEMuTriggerEff(vector<Electron> &electrons, vector<Muon> &muons, bool isDATA, int sys);
     double getEMuTriggerSF(vector<Electron> &electrons, vector<Muon> &muons, int sys);
-    double getDZEfficiency(TString SFkey, bool isDATA);
+    double getPairwiseFilterEff(TString filter, bool isDATA);
+    //double getDZEfficiency(TString SFkey, bool isDATA);
     double getNPVReweight(unsigned int NPV, TString &path);
 };
 

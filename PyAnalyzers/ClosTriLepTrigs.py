@@ -158,11 +158,6 @@ class ClosTriLepTrigs(TriLeptonBase):
             weight *= w_prefire
             weight *= w_pileup
 
-            w_topptweight = 1.
-            if "TTLL" in super().MCSample or "TTLJ" in super().MCSample:
-                w_topptweight = super().mcCorr.GetTopPtReweight(truth)
-            weight *= w_topptweight
-
         return weight
     
     def FillObjects(self, channel, evt, objects, weight):
@@ -175,16 +170,15 @@ class ClosTriLepTrigs(TriLeptonBase):
         trigWeight = 1.
         trigWeightUp = 1.
         trigWeightDown = 1.
+        # Pairwise Filter Efficiencies are already applied
         if channel == "SR1E2Mu":
-            dzEff = self.getDZEfficiency("EMu", isDATA=False) 
-            trigWeight = self.getEMuTriggerEff(electrons, muons, False, 0) * dzEff
-            trigWeightUp = self.getEMuTriggerEff(electrons, muons, False, 1) * dzEff
-            trigWeightDown = self.getEMuTriggerEff(electrons, muons, False, -1) * dzEff
+            trigWeight = self.getEMuTriggerEff(electrons, muons, False, 0)
+            trigWeightUp = self.getEMuTriggerEff(electrons, muons, False, 1) 
+            trigWeightDown = self.getEMuTriggerEff(electrons, muons, False, -1)
         elif channel == "SR3Mu":
-            dzEff = self.getDZEfficiency("DiMu", isDATA=False) 
-            trigWeight = self.getDblMuTriggerEff(muons, False, 0) * dzEff
-            trigWeightUp = self.getDblMuTriggerEff(muons, False, 1) * dzEff
-            trigWeightDown = self.getDblMuTriggerEff(muons, False, -1) * dzEff
+            trigWeight = self.getDblMuTriggerEff(muons, False, 0) 
+            trigWeightUp = self.getDblMuTriggerEff(muons, False, 1) 
+            trigWeightDown = self.getDblMuTriggerEff(muons, False, -1) 
         else:
             raise NameError(f"Wrong channel {channel}") 
         
