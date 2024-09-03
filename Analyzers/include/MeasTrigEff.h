@@ -3,23 +3,6 @@
 
 #include "AnalyzerCore.h"
 
-class IDContainer {
-public:
-    IDContainer() { Tight = Loose = Veto = "";}
-    inline void SetIDs(const TString& tight, const TString& loose, const TString& veto) {
-        Tight = tight;
-        Loose = loose;
-        Veto = veto;
-    }
-    TString GetTightID() const { return Tight; }
-    TString GetLooseID() const { return Loose; }
-    TString GetVetoID() const { return Veto; }
-private:
-    TString Tight;
-    TString Loose;
-    TString Veto;
-};
-
 class TriggerContainer {
 public:
     TriggerContainer() {

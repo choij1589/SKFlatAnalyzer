@@ -47,7 +47,6 @@ public:
     double getEMuTriggerEff(vector<Electron> &electrons, vector<Muon> &muons, bool isDATA, int sys);
     double getEMuTriggerSF(vector<Electron> &electrons, vector<Muon> &muons, int sys);
     double getPairwiseFilterEff(TString filter, bool isDATA);
-    //double getDZEfficiency(TString SFkey, bool isDATA);
     double getNPVReweight(unsigned int NPV, TString &path);
 };
 

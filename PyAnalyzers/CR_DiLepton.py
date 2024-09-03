@@ -1,15 +1,13 @@
 from ROOT import gSystem
 from ROOT import DiLeptonBase
-from ROOT import TString
 from ROOT.std import vector
+from ROOT import TString
 from ROOT.JetTagging import Parameters as jParameters
 from ROOT import Muon, Electron, Jet
-gSystem.Load("/cvmfs/cms.cern.ch/slc7_amd64_gcc900/external/lhapdf/6.2.3/lib/libLHAPDF.so")
 
-class DiLeptonValidation(DiLeptonBase):
+class CR_DiLepton(DiLeptonBase):
     def __init__(self):
         super().__init__()
-        # at this point, DiLeptonBase::initializeAnalyzer has not been called
         
     def initializePyAnalyzer(self):
         super().initializeAnalyzer()
@@ -17,8 +15,7 @@ class DiLeptonValidation(DiLeptonBase):
         self.channel = None
         self.run_syst = False
         if (super().RunDiMu and super().RunEMu):
-            print("Wrong channel flag")
-            exit(1)
+            raise ValueError(f"Wrong channel flag {super().RunDiMu} {super().RunEMu}")
         if super().RunDiMu:     self.channel = "RunDiMu"
         if super().RunEMu:      self.channel = "RunEMu"
         if super().RunSyst:     self.run_syst = True
@@ -28,7 +25,7 @@ class DiLeptonValidation(DiLeptonBase):
         if self.run_syst:
             if super().RunDiMu:
                 self.weightVariations += ["L1PrefireUp", "L1PrefireDown",
-                                          "PileupReweightUp", "PileupReweightDown",
+                                          "PileupReweightUp","PileupReweightDown",
                                           "MuonIDSFUp", "MuonIDSFDown",
                                           "DblMuTrigSFUp", "DblMuTrigSFDown"]
             elif super().RunEMu:
@@ -36,11 +33,7 @@ class DiLeptonValidation(DiLeptonBase):
                                           "PileupReweightUp", "PileupReweightDown",
                                           "MuonIDSFUp", "MuonIDSFDown",
                                           "ElectronIDSFUp", "ElectronIDSFDown",
-                                          "EMuTrigSFUp", "EMuTrigSFDown",
-                                          "HeavyTagUpUnCorr", "HeavyTagDownUnCorr",
-                                          "HeavyTagUpCorr", "HeavyTagDownCorr",
-                                          "LightTagUpUnCorr", "LightTagDownUnCorr",
-                                          "LightTagUpCorr", "LightTagDownCorr"]
+                                          "EMuTrigSFUp", "EMuTrigSFDown"]
             self.scaleVariations += ["JetResUp", "JetResDown", 
                                      "JetEnUp", "JetEnDown",
                                      "ElectronResUp", "ElectronResDown", 
@@ -68,8 +61,8 @@ class DiLeptonValidation(DiLeptonBase):
                        "bjets": bjets,
                        "METv": METv
                        }
-            weight = self.getBaseWeight(ev, jets, truth)
-            self.FillObjects(channel, objects, weight, syst="Central_NoLeptonWeight")
+            weight = self.getBaseWeight(channel, ev, jets, truth)
+            self.FillObjects(channel, objects, weight, syst="Central_BaseWeight")
             for syst in self.weightVariations:
                 weight = self.getWeight(channel, ev, tightMuons, tightElectrons, jets, truth, syst)
                 self.FillObjects(channel, objects, weight, syst)
@@ -110,8 +103,8 @@ class DiLeptonValidation(DiLeptonBase):
         
         vetoMuons = super().SelectMuons(allMuons, super().MuonIDs[2], 10., 2.4)
         tightMuons = super().SelectMuons(vetoMuons, super().MuonIDs[0], 10., 2.4)
-        vetoElectrons = super().SelectElectrons(allElectrons, super().ElectronIDs[2], 10., 2.5)
-        tightElectrons = super().SelectElectrons(vetoElectrons, super().ElectronIDs[0], 10., 2.5)
+        vetoElectrons = super().SelectElectrons(allElectrons, super().ElectronIDs[2], 15., 2.5)
+        tightElectrons = super().SelectElectrons(vetoElectrons, super().ElectronIDs[0], 15., 2.5)
         jets = super().SelectJets(allJets, "tight", 20., 2.4)
         jets = super().JetsVetoLeptonInside(jets, vetoElectrons, vetoMuons, 0.4)
         bjets = vector[Jet]()
@@ -167,8 +160,7 @@ class DiLeptonValidation(DiLeptonBase):
     def getWeight(self, channel, event, muons, electrons, jets, truth, syst="Central"):
         weight = 1.
         if not syst in self.systematics:
-            print(f"[PromptEstimator::getWeight] Wrong systematic {syst}")
-            exit(1)
+            raise ValueError(f"[PromptEstimator::getWeight] Wrong systematic {syst}")
 
         if not super().IsDATA:
             weight *= super().MCweight()
@@ -181,15 +173,11 @@ class DiLeptonValidation(DiLeptonBase):
             elif syst == "PileupReweightDown": w_pileup = super().GetPileUpWeight(super().nPileUp, -1)
             else:                              w_pileup = super().GetPileUpWeight(super().nPileUp, 0)
             
-            w_zptweight = 1.
             w_topptweight = 1.
-            #if "DYJets" in super().MCSample:
-            #    if syst == "DYReweightUp":     w_zptweight = super().mcCorr.GetOfficialDYReweight(truth, 1)
-            #    elif syst == "DYReweightDown": w_zptweight = super().mcCorr.GetOfficialDYReweight(truth, -1)
-            #    else:                          w_zptweight = super().mcCorr.GetOfficialDYReweight(truth, 0)
+            
             if "TTLL" in super().MCSample or "TTLJ" in super().MCSample:
                 w_topptweight = super().mcCorr.GetTopPtReweight(truth)
-            weight *= (w_zptweight * w_topptweight)
+            weight *= w_topptweight
 
             w_muonRecoSF = 1.
             w_muonIDSF = 1.
@@ -213,45 +201,33 @@ class DiLeptonValidation(DiLeptonBase):
                 if syst == "DblMuTrigSFUp":     w_trigSF = self.getDblMuTriggerSF(muons, 1)
                 elif syst == "DblMuTrigSFDown": w_trigSF = self.getDblMuTriggerSF(muons, -1)
                 else:                           w_trigSF = self.getDblMuTriggerSF(muons, 0)
-                # DZ efficiency
-                w_trigSF *= self.getDZEfficiency(channel, isDATA=True)/self.getDZEfficiency(channel, isDATA=False)
-
 
             if "EMu" in channel:
                 if syst == "EMuTrigSFUp":     w_trigSF = self.getEMuTriggerSF(electrons, muons, 1)
                 elif syst == "EMuTrigSFDown": w_trigSF = self.getEMuTriggerSF(electrons, muons, -1)
                 else:                         w_trigSF = self.getEMuTriggerSF(electrons, muons, 0)
-                # DZ efficiency
-                w_trigSF *= self.getDZEfficiency(channel, isDATA=True)/self.getDZEfficiency(channel, isDATA=False)
 
-            weight *= w_prefire            # print(f"w_prefire: {w_prefire}")
-            weight *= w_pileup             # print(f"w_pileup: {w_pileup}")
-            weight *= w_muonRecoSF
-            weight *= w_muonIDSF
-            weight *= w_eleRecoSF
-            weight *= w_eleIDSF
-            weight *= w_trigSF             # print(f"muontrig: {w_dblMuTrigSF}")
+            weight *= w_prefire            #;print(f"w_prefire: {w_prefire}")
+            weight *= w_pileup             #;print(f"w_pileup: {w_pileup}")
+            weight *= w_muonRecoSF         #;print(f"muonreco: {w_muonRecoSF}")
+            weight *= w_muonIDSF           #;print(f"muonid: {w_muonIDSF}")
+            weight *= w_eleRecoSF          #;print(f"electronreco: {w_eleRecoSF}")        
+            weight *= w_eleIDSF            #;print(f"electronid: {w_eleIDSF}")
+            weight *= w_trigSF             #;print(f"trig: {w_trigSF}")
 
             # b-tagging
             if "EMu" in channel:
                 jtp = jParameters(3, 1, 0, 1)    # DeepJet, Medium, incl, mujets
                 vjets = vector[Jet]()
-                for j in jets: vjets.emplace_back(j)
-                if syst == "HeavyTagUpUnCorr":     w_btag = super().mcCorr.GetBTaggingReweight_1a(vjets, jtp, "SystUpHTag")
-                elif syst == "HeavyTagDownUnCorr": w_btag = super().mcCorr.GetBTaggingReweight_1a(vjets, jtp, "SystDownHTag")
-                elif syst == "HeavyTagUpCorr":     w_btag = super().mcCorr.GetBTaggingReweight_1a(vjets, jtp, "SystUpHTagCorr")
-                elif syst == "HeavyTagDownCorr":   w_btag = super().mcCorr.GetBTaggingReweight_1a(vjets, jtp, "SystDownHTagCorr")
-                elif syst == "LightTagUpUnCorr":   w_btag = super().mcCorr.GetBTaggingReweight_1a(vjets, jtp, "SystUpLTag")
-                elif syst == "LightTagDownUnCorr": w_btag = super().mcCorr.GetBTaggingReweight_1a(vjets, jtp, "SystDownLTag")
-                elif syst == "LightTagUpCorr":     w_btag = super().mcCorr.GetBTaggingReweight_1a(vjets, jtp, "SystUpLTagCorr")
-                elif syst == "LightTagDownCorr":   w_btag = super().mcCorr.GetBTaggingReweight_1a(vjets, jtp, "SystDownLTagCorr")
-                else:                              w_btag = super().mcCorr.GetBTaggingReweight_1a(vjets, jtp)
+                for j in jets: 
+                    vjets.emplace_back(j)
+                w_btag = super().mcCorr.GetBTaggingReweight_1a(vjets, jtp)
                 weight *= w_btag
         
         return weight
     
     # to compare Lepton ID SF / trigger SF w.r.t. baseline
-    def getBaseWeight(self, event, jets, truth, applyJetTagging=True):
+    def getBaseWeight(self, channel, event, jets, truth):
         weight = 1.
         if not super().IsDATA:
             weight *= super().MCweight()
@@ -263,10 +239,11 @@ class DiLeptonValidation(DiLeptonBase):
             if "TTLL" in super().MCSample or "TTLJ" in super().MCSample:
                 weight *= super().mcCorr.GetTopPtReweight(truth)
 
-            if applyJetTagging:
+            if "EMu" in channel:
                 jtp = jParameters(3, 1, 0, 1)
                 vjets = vector[Jet]()
-                for j in jets: vjets.emplace_back(j)
+                for j in jets: 
+                    vjets.emplace_back(j)
                 weight *= super().mcCorr.GetBTaggingReweight_1a(vjets, jtp)
         
         return weight

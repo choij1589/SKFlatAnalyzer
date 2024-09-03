@@ -33,6 +33,23 @@
 #define M_Z 91.1876
 #define M_W 80.379
 
+class IDContainer {
+public:
+  IDContainer() { Tight = Loose = Veto = "";}
+  inline void SetIDs(const TString& tight, const TString& loose, const TString& veto) {
+    Tight = tight; 
+    Loose = loose; 
+    Veto = veto; 
+  }
+  TString GetTightID() { return Tight; }
+  TString GetLooseID() { return Loose; }
+  TString GetVetoID() { return Veto; }
+private:
+  TString Tight;
+  TString Loose;
+  TString Veto;
+};
+
 class AnalyzerCore: public SKFlatNtuple {
 
 public:

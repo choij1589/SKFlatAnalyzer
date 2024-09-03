@@ -4,23 +4,6 @@
 #include "AnalyzerCore.h"
 #include "NonpromptParameter.h"
 
-class IDContainerV4 {
-public:
-    IDContainerV4() { Tight = Loose = Veto = "";}
-    inline void SetIDs(const TString& tight, const TString& loose, const TString& veto) {
-        Tight = tight; 
-        Loose = loose; 
-        Veto = veto; 
-    }
-    TString GetTightID() { return Tight; }
-    TString GetLooseID() { return Loose; }
-    TString GetVetoID() { return Veto; }
-private:
-    TString Tight;
-    TString Loose;
-    TString Veto;
-};
-
 class MeasFakeRateV4: public AnalyzerCore {
 public:
     MeasFakeRateV4();
@@ -35,7 +18,7 @@ public:
     vector<double> ptcorr_bins, abseta_bins;
 
     // ID Definitions
-    IDContainerV4 MuID, ElID;
+    IDContainer MuID, ElID;
 
     // Trigger Definitions
     TString isoSglLepTrig;
