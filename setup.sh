@@ -28,7 +28,7 @@ elif [[ $HOSTNAME == *"cms"* ]]; then
   # root configuration
   source /home/choij/miniconda3/bin/activate
   conda activate pyg
-elif [[ $HOSTNAME == *"localhost"* ]]; then
+elif [[ $HOSTNAME == *"snu-private"* ]]; then
   export SKFlat_WD="/home/$USER/workspace/SKFlatAnalyzer"
   export SKFlatRunlogDir="/home/$USER/workspace/SKFlatRunlog"
   export SKFlatOutputDir="/home/$USER/workspace/SKFlatOutput"
