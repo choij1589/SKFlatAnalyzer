@@ -61,7 +61,7 @@ void MeasTrigEff::initializeAnalyzer() {
         Triggers.SetDblMuTrigs({"HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v"});
         Triggers.SetDblMuDZTrigs({"HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"});
         Triggers.SetDblMuDZMTrigs({"HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8_v"});
-        Triggers.SetEMuTrigs({"HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v", "HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v"});
+        Triggers.SetEMuTrigs({"HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v", "HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v"});
         Triggers.SetEMuDZTrigs({"HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", "HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v"});
         Triggers.SetMu23El12_MuLegFilter("hltMu23TrkIsoVVLEle12CaloIdLTrackIdLIsoVLMuonlegL3IsoFiltered23");
         Triggers.SetMu8El23_MuLegFilter("hltMu8TrkIsoVVLEle23CaloIdLTrackIdLIsoVLMuonlegL3IsoFiltered8");
@@ -153,7 +153,11 @@ void MeasTrigEff::measEMuTrigEff_MuLeg(vector<Muon> &tightMuons, vector<Muon> &v
         if (el.PassPath(path)) {passTagHLT = true; break; }
     }
     const bool passMu23Leg = mu.PassFilter(Triggers.GetMu23El12_MuLegFilter());
-    const bool passMu8Leg = mu.PassFilter(Triggers.GetMu8El23_MuLegFilter());
+    // filter name different only in 17B in full Run-2, checked eff(DZ) ~ 1 for 17
+    bool passMu8Leg = mu.PassFilter(Triggers.GetMu8El23_MuLegFilter());
+    if (DataEra == "2017") {
+        passMu8Leg = mu.PassPath("HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v");
+    }
     if (! passTagHLT) return;
 
     FillHist("TrigEff_Mu23El12_MuLeg_DENOM/Central/fEta_Pt", fabs(mu.Eta()), mu.Pt(), weight, EtaBins, Mu23PtBins);
