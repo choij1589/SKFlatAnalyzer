@@ -57,7 +57,7 @@ class PromptEstimator(TriLeptonBase):
         self.models = loadModels("GraphNeuralNet", self.channel, self.signalStrings, self.backgroundStrings)
         
     def executeEvent(self):
-        if not super().PassMETFilter(): return None
+        if not super().PassMETFilter(): return
         ev = super().GetEvent()
         rawMuons = super().GetAllMuons()
         rawElectrons = super().GetAllElectrons()
@@ -65,38 +65,33 @@ class PromptEstimator(TriLeptonBase):
         METv = ev.GetMETVector()
         truth = super().GetGens() if not super().IsDATA else None
         
-        # Central scale
-        vetoMuons, tightMuons, vetoElectrons, tightElectrons, jets, bjets = self.defineObjects(rawMuons, rawElectrons, rawJets)
-        thisChannel = self.selectEvent(ev, truth, vetoMuons, tightMuons, vetoElectrons, tightElectrons, jets, bjets, METv)
-        if not thisChannel is None:
+        def processEvent(syst, apply_weight_variation=False):
+            vetoMuons, tightMuons, vetoElectrons, tightElectrons, jets, bjets = self.defineObjects(rawMuons, rawElectrons, rawJets, syst)
+            channel = self.selectEvent(ev, truth, vetoMuons, tightMuons, vetoElectrons, tightElectrons, jets, bjets, METv) 
+            if channel is None: return
+            
+            # Evaluate scores
             data, scores = self.evalScore(tightMuons, tightElectrons, jets, bjets, METv)
-            # make objects as a dictionary
             objects = {"muons": tightMuons,
                        "electrons": tightElectrons,
                        "jets": jets,
                        "bjets": bjets,
                        "METv": METv,
                        "data": data,
-                       "scores": scores}
-            for syst in self.weightVariations:
-                weight = self.getWeight(thisChannel, ev, tightMuons, tightElectrons, jets, syst)
-                self.FillObjects(thisChannel, objects, weight, syst)
+                       "scores": scores
+            }
+            if apply_weight_variation:
+                for syst in self.weightVariations:
+                    weight = self.getWeight(channel, ev, tightMuons, tightElectrons, jets, syst)
+                    self.FillObjects(channel, objects, weight, syst)
+            else:
+                weight = self.getWeight(channel, ev, tightMuons, tightElectrons, jets)
+                self.FillObjects(channel, objects, weight, syst)
+        
+        processEvent("Central", apply_weight_variation=True)
         for syst in self.scaleVariations:
-            vetoMuons, tightMuons, vetoElectrons, tightElectrons, jets, bjets = self.defineObjects(rawMuons, rawElectrons, rawJets, syst)
-            thisChannel = self.selectEvent(ev, truth, vetoMuons, tightMuons, vetoElectrons, tightElectrons, jets, bjets, METv)
-            if not thisChannel is None:
-                data, scores = self.evalScore(tightMuons, tightElectrons, jets, bjets, METv)
-                objects = {"muons": tightMuons,
-                           "electrons": tightElectrons,
-                           "jets": jets,
-                           "bjets": bjets,
-                           "METv": METv,
-                           "data": data,
-                           "scores": scores
-                           }
-                weight = self.getWeight(thisChannel, ev, tightMuons, tightElectrons, jets, syst)
-                self.FillObjects(thisChannel, objects, weight, syst)
-
+            processEvent(syst, apply_weight_variation=False)
+        
     def defineObjects(self, rawMuons, rawElectrons, rawJets, syst="Central"):
         # first hard copy objects
         allMuons = vector[Muon]()
