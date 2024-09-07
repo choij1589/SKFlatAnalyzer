@@ -4,7 +4,6 @@ from ROOT import TTree, TString
 from ROOT.std import vector
 from ROOT.JetTagging import Parameters as jParameters
 from ROOT import Lepton, Muon, Electron, Jet
-gSystem.Load("/cvmfs/cms.cern.ch/slc7_amd64_gcc900/external/lhapdf/6.2.3/lib/libLHAPDF.so")
 
 from array import array
 from itertools import product
@@ -13,23 +12,21 @@ from MLTools.helpers import getGraphInput, getGraphScore
 
 class PromptUnbinned(TriLeptonBase):
     def __init__(self):
-        # at this point, TriLeptonBase::initializeAnalyzer has not been activated
         super().__init__()
         
     def initializePyAnalyzer(self):
-        super().initializeAnalyzer()
+        self.initializeAnalyzer()
         
         ## channel assertion
-        try: assert super().Skim1E2Mu or super().Skim3Mu
-        except: raise AssertionError(f"Wrong channel flag")
-        
-        if super().Skim1E2Mu: self.channel = "Skim1E2Mu"
-        if super().Skim3Mu: self.channel = "Skim3Mu"
-        
+        if self.Skim1E2Mu: self.skim = "Skim1E2Mu"
+        if self.Skim3Mu: self.skim = "Skim3Mu"
+        if self.skim not in ["Skim1E2Mu", "Skim3Mu"]:
+            raise AssertionError(f"Wrong channel flag")
+
         # Not implementing neural networks now
         # self.network = "GraphNeuralNet"
         
-        if self.channel == "Skim1E2Mu":
+        if self.skim == "Skim1E2Mu":
             self.weightVariations = ["L1PrefireUp", "L1PrefireDown",
                                     "PileupReweightUp", "PileupReweightDown",
                                     "MuonIDSFUp", "MuonIDSFDown",
@@ -40,7 +37,7 @@ class PromptUnbinned(TriLeptonBase):
                                     "LightTagUpUnCorr", "LightTagDownUnCorr",
                                     "LightTagUpCorr", "LightTagDownCorr"]
         
-        if self.channel == "Skim3Mu":
+        if self.skim == "Skim3Mu":
             self.weightVariations = ["L1PrefireUp", "L1PrefireDown",
                                     "PileupReweightUp", "PileupReweightDown",
                                     "MuonIDSFUp", "MuonIDSFDown",
