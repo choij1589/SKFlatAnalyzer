@@ -164,10 +164,10 @@ class PromptSelector(TriLeptonBase):
             fakeMuons = vector[Muon]()
             convElectrons = vector[Electron]()
             for mu in tightMuons:
-                if super().GetLeptonType(mu, truth) in [4, 5, -5, -6]: convMuons.emplace_back(mu)
-                if super().GetLeptonType(mu, truth) in [-1, -2, -3, -4]: fakeMuons.emplace_back(mu)
+                if self.GetLeptonType(mu, truth) in [4, 5, -5, -6]: convMuons.emplace_back(mu)
+                if self.GetLeptonType(mu, truth) in [-1, -2, -3, -4]: fakeMuons.emplace_back(mu)
             for ele in tightElectrons:
-                if super().GetLeptonType(ele, truth) in [4, 5, -5, -6]: convElectrons.emplace_back(ele)
+                if self.GetLeptonType(ele, truth) in [4, 5, -5, -6]: convElectrons.emplace_back(ele)
             # remove hadronic contribution
             if self.skim == "Skim1E2Mu":
                 if not fakeMuons.size() == 0: return
