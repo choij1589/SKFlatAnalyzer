@@ -5,7 +5,7 @@ from ROOT.std import vector
 from ROOT.JetTagging import Parameters as jParameters
 from ROOT import Lepton, Muon, Electron, Jet
 
-class MeasConvMatrix(TriLeptonBase):
+class MeasConvMatrixV2(TriLeptonBase):
     def __init__(self):
         super().__init__()
         # at this point, TriLeptonBase::initializeAnalyzer has not been activate
@@ -109,9 +109,10 @@ class MeasConvMatrix(TriLeptonBase):
             if not mu1.Charge()+mu2.Charge() == 0: return None
             pair = self.makePair(looseMuons)
             isOnZ = abs((mu1+mu2+ele).M() - 91.2) < 10. 
-            if not pair.M() > 12.: return None
+            if not (12. < pair.M() and pair.M() < 81.2): return None
             if not isOnZ: return None
-            if not bjets.size() == 0: return None
+            if not METv.Pt() < 50.: return None
+            #if not bjets.size() == 0: return None
             
             return "ZGamma1E2Mu"
         
@@ -131,10 +132,14 @@ class MeasConvMatrix(TriLeptonBase):
             if not abs(mu1.Charge()+mu2.Charge()+mu3.Charge()) == 1: return None
             pair1, pair2 = self.makePair(looseMuons)
             isOnZ = abs((mu1+mu2+mu3).M() - 91.2) < 10.
-            if not pair1.M() > 12.: return None
-            if not pair2.M() > 12.: return None
+            belowZmass = ((12. < pair1.M() and pair1.M() < 81.2) or (12. < pair2.M() and pair2.M() < 81.2))
+            #if not pair1.M() > 12.: return None
+            #if not pair2.M() > 12.: return None
+            if not abs(pair1.M() - 91.2) > 10.: return None
+            if not abs(pair2.M() - 91.2) > 10.: return None
             if not isOnZ: return None
-            if not bjets.size() == 0: return None
+            if not METv.Pt() < 50.: return None
+            #if not bjets.size() == 0: return None
             
             return "ZGamma3Mu"
         

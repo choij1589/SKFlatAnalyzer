@@ -5,7 +5,7 @@ from ROOT.std import vector
 from ROOT.JetTagging import Parameters as jParameters
 from ROOT import Lepton, Muon, Electron, Jet
 
-class MeasConvMatrix(TriLeptonBase):
+class MeasConvMatrixV3(TriLeptonBase):
     def __init__(self):
         super().__init__()
         # at this point, TriLeptonBase::initializeAnalyzer has not been activate
@@ -109,9 +109,10 @@ class MeasConvMatrix(TriLeptonBase):
             if not mu1.Charge()+mu2.Charge() == 0: return None
             pair = self.makePair(looseMuons)
             isOnZ = abs((mu1+mu2+ele).M() - 91.2) < 10. 
-            if not pair.M() > 12.: return None
+            if not (12. < pair.M() and pair.M() < 81.2): return None
             if not isOnZ: return None
-            if not bjets.size() == 0: return None
+            if not METv.Pt() < 50.: return None
+            #if not bjets.size() == 0: return None
             
             return "ZGamma1E2Mu"
         
@@ -131,10 +132,14 @@ class MeasConvMatrix(TriLeptonBase):
             if not abs(mu1.Charge()+mu2.Charge()+mu3.Charge()) == 1: return None
             pair1, pair2 = self.makePair(looseMuons)
             isOnZ = abs((mu1+mu2+mu3).M() - 91.2) < 10.
-            if not pair1.M() > 12.: return None
-            if not pair2.M() > 12.: return None
+            belowZmass = ((12. < pair1.M() and pair1.M() < 81.2) or (12. < pair2.M() and pair2.M() < 81.2))
+            #if not pair1.M() > 12.: return None
+            #if not pair2.M() > 12.: return None
+            if not abs(pair1.M() - 91.2) > 10.: return None
+            if not abs(pair2.M() - 91.2) > 10.: return None
             if not isOnZ: return None
-            if not bjets.size() == 0: return None
+            if not METv.Pt() < 50.: return None
+            #if not bjets.size() == 0: return None
             
             return "ZGamma3Mu"
         
@@ -192,43 +197,31 @@ class MeasConvMatrix(TriLeptonBase):
         bjets = objects["bjets"]
         METv = objects["METv"]
         
-        # for patching sample
-        leptons = vector[Lepton]()
-        for mu in muons: leptons.emplace_back(mu)
-        for ele in electrons: leptons.emplace_back(ele)
-        
-        region = ""
-        # if at least one letpon's has pt < 15 GeV, it is low pt region -> DYJets
-        # else, it is high pt region ->ZGamma
-        for lep in leptons:
-            if lep.Pt() < 15.: region = "LowPT"
-        if region == "": region = "HighPT"
-        
         ## fill input observables
         for idx, mu in enumerate(muons, start=1):
-            super().FillHist(f"{channel}/{region}/{syst}/muons/{idx}/pt", mu.Pt(), weight, 300, 0., 300.)
-            super().FillHist(f"{channel}/{region}/{syst}/muons/{idx}/eta", mu.Eta(), weight, 48, -2.4, 2.4)
-            super().FillHist(f"{channel}/{region}/{syst}/muons/{idx}/phi", mu.Phi(), weight, 64, -3.2, 3.2)
-            super().FillHist(f"{channel}/{region}/{syst}/muons/{idx}/mass", mu.M(), weight, 10, 0., 1.)
+            super().FillHist(f"{channel}/{syst}/muons/{idx}/pt", mu.Pt(), weight, 300, 0., 300.)
+            super().FillHist(f"{channel}/{syst}/muons/{idx}/eta", mu.Eta(), weight, 48, -2.4, 2.4)
+            super().FillHist(f"{channel}/{syst}/muons/{idx}/phi", mu.Phi(), weight, 64, -3.2, 3.2)
+            super().FillHist(f"{channel}/{syst}/muons/{idx}/mass", mu.M(), weight, 10, 0., 1.)
         for idx, ele in enumerate(electrons, start=1):
-            super().FillHist(f"{channel}/{region}/{syst}/electrons/{idx}/pt", ele.Pt(), weight, 300, 0., 300.)
-            super().FillHist(f"{channel}/{region}/{syst}/electrons/{idx}/eta", ele.Eta(), weight, 50, -2.5, 2.5)
-            super().FillHist(f"{channel}/{region}/{syst}/electrons/{idx}/Phi", ele.Phi(), weight, 64, -3.2, 3.2)
-            super().FillHist(f"{channel}/{region}/{syst}/electrons/{idx}/mass", ele.M(), weight, 100, 0., 1.)
+            super().FillHist(f"{channel}/{syst}/electrons/{idx}/pt", ele.Pt(), weight, 300, 0., 300.)
+            super().FillHist(f"{channel}/{syst}/electrons/{idx}/eta", ele.Eta(), weight, 50, -2.5, 2.5)
+            super().FillHist(f"{channel}/{syst}/electrons/{idx}/Phi", ele.Phi(), weight, 64, -3.2, 3.2)
+            super().FillHist(f"{channel}/{syst}/electrons/{idx}/mass", ele.M(), weight, 100, 0., 1.)
         for idx, jet in enumerate(jets, start=1):
-            super().FillHist(f"{channel}/{region}/{syst}/jets/{idx}/pt", jet.Pt(), weight, 300, 0., 300.)
-            super().FillHist(f"{channel}/{region}/{syst}/jets/{idx}/eta", jet.Eta(), weight, 48, -2.4, 2.4)
-            super().FillHist(f"{channel}/{region}/{syst}/jets/{idx}/phi", jet.Phi(), weight, 64, -3.2, 3.2)
-            super().FillHist(f"{channel}/{region}/{syst}/jets/{idx}/mass", jet.M(), weight, 100, 0., 100.)
+            super().FillHist(f"{channel}/{syst}/jets/{idx}/pt", jet.Pt(), weight, 300, 0., 300.)
+            super().FillHist(f"{channel}/{syst}/jets/{idx}/eta", jet.Eta(), weight, 48, -2.4, 2.4)
+            super().FillHist(f"{channel}/{syst}/jets/{idx}/phi", jet.Phi(), weight, 64, -3.2, 3.2)
+            super().FillHist(f"{channel}/{syst}/jets/{idx}/mass", jet.M(), weight, 100, 0., 100.)
         for idx, bjet in enumerate(bjets, start=1):
-            super().FillHist(f"{channel}/{region}/{syst}/bjets/{idx}/pt", bjet.Pt(), weight, 300, 0., 300.)
-            super().FillHist(f"{channel}/{region}/{syst}/bjets/{idx}/eta", bjet.Eta(), weight, 48, -2.4, 2.4)
-            super().FillHist(f"{channel}/{region}/{syst}/bjets/{idx}/phi", bjet.Phi(), weight, 64, -3.2, 3.2)
-            super().FillHist(f"{channel}/{region}/{syst}/bjets/{idx}/mass", bjet.M(), weight, 100, 0., 100.)
-        super().FillHist(f"{channel}/{region}/{syst}/jets/size", jets.size(), weight, 20, 0., 20.)
-        super().FillHist(f"{channel}/{region}/{syst}/bjets/size", bjets.size(), weight, 15, 0., 15.)
-        super().FillHist(f"{channel}/{region}/{syst}/METv/pt", METv.Pt(), weight, 300, 0., 300.)
-        super().FillHist(f"{channel}/{region}/{syst}/METv/phi", METv.Phi(), weight, 64, -3.2, 3.2)
+            super().FillHist(f"{channel}/{syst}/bjets/{idx}/pt", bjet.Pt(), weight, 300, 0., 300.)
+            super().FillHist(f"{channel}/{syst}/bjets/{idx}/eta", bjet.Eta(), weight, 48, -2.4, 2.4)
+            super().FillHist(f"{channel}/{syst}/bjets/{idx}/phi", bjet.Phi(), weight, 64, -3.2, 3.2)
+            super().FillHist(f"{channel}/{syst}/bjets/{idx}/mass", bjet.M(), weight, 100, 0., 100.)
+        super().FillHist(f"{channel}/{syst}/jets/size", jets.size(), weight, 20, 0., 20.)
+        super().FillHist(f"{channel}/{syst}/bjets/size", bjets.size(), weight, 15, 0., 15.)
+        super().FillHist(f"{channel}/{syst}/METv/pt", METv.Pt(), weight, 300, 0., 300.)
+        super().FillHist(f"{channel}/{syst}/METv/phi", METv.Phi(), weight, 64, -3.2, 3.2)
         
         ## fill ZCand
         ZCand = None
@@ -236,10 +229,10 @@ class MeasConvMatrix(TriLeptonBase):
         if "3Mu" in channel:   ZCand = muons.at(0) + muons.at(1) + muons.at(2)
         convLep = self.getConvLepton(electrons, muons)
         
-        super().FillHist(f"{channel}/{region}/{syst}/ZCand/pt", ZCand.Pt(), weight, 300, 0., 300.)
-        super().FillHist(f"{channel}/{region}/{syst}/ZCand/eta", ZCand.Eta(), weight, 100, -5., 5.)
-        super().FillHist(f"{channel}/{region}/{syst}/ZCand/phi", ZCand.Phi(), weight, 64, -3.2, 3.2)
-        super().FillHist(f"{channel}/{region}/{syst}/ZCand/mass", ZCand.M(), weight, 200, 0., 200.)
-        super().FillHist(f"{channel}/{region}/{syst}/convLep/pt", convLep.Pt(), weight, 300, 0., 300.)
-        super().FillHist(f"{channel}/{region}/{syst}/convLep/eta", convLep.Eta(), weight, 50, -2.5, 2.5)
-        super().FillHist(f"{channel}/{region}/{syst}/convLep/phi", convLep.Phi(), weight, 64, -3.2, 3.2)
+        super().FillHist(f"{channel}/{syst}/ZCand/pt", ZCand.Pt(), weight, 300, 0., 300.)
+        super().FillHist(f"{channel}/{syst}/ZCand/eta", ZCand.Eta(), weight, 100, -5., 5.)
+        super().FillHist(f"{channel}/{syst}/ZCand/phi", ZCand.Phi(), weight, 64, -3.2, 3.2)
+        super().FillHist(f"{channel}/{syst}/ZCand/mass", ZCand.M(), weight, 200, 0., 200.)
+        super().FillHist(f"{channel}/{syst}/convLep/pt", convLep.Pt(), weight, 300, 0., 300.)
+        super().FillHist(f"{channel}/{syst}/convLep/eta", convLep.Eta(), weight, 50, -2.5, 2.5)
+        super().FillHist(f"{channel}/{syst}/convLep/phi", convLep.Phi(), weight, 64, -3.2, 3.2)
