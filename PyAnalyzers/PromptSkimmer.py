@@ -317,10 +317,10 @@ class PromptSkimmer(TriLeptonBase):
                 if self.GetLeptonType(mu, truth) in [-1, -2, -3, -4]: fakeMuons.emplace_back(mu)
             for ele in tightElectrons:
                 if self.GetLeptonType(ele, truth) in [4, 5, -5, -6]: convElectrons.emplace_back(ele)
-            if self.channel == "Skim1E2Mu":
+            if self.skim == "Skim1E2Mu":
                 if not fakeMuons.size() == 0: return
                 if not convElectrons.size() == 1: return
-            if self.channel == "Skim3Mu":
+            if self.skim == "Skim3Mu":
                 if not fakeMuons.size() == 0: return
                 if not convMuons.size() == 1: return
                 
