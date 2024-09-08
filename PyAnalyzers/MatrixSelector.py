@@ -130,7 +130,7 @@ class MatrixSelector(TriLeptonBase):
         ## 3. Exist OS muon pair,
         ## 4. All OS muon pair mass > 12 GeV
         ## 5. At least two jets
-        if skim == "Skim3Mu":
+        if self.skim == "Skim3Mu":
             if not event.PassTrigger(self.DblMuTriggers): return
             mu1, mu2, mu3  = tuple(looseMuons)
             if not mu1.Pt() > 20.: return

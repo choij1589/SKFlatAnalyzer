@@ -14,4 +14,5 @@ fi
 
 SKFlat.py -a PromptSelector -i $DATASTREAM --skim SkimTree_SS2lOR3l -n 10 -e ${ERA} --userflags $CHANNEL --memory $MEMORY --python &
 SKFlat.py -a MatrixSelector -i $DATASTREAM --skim SkimTree_SS2lOR3l -n 10 -e ${ERA} --userflags $CHANNEL --memory $MEMORY --python &
-SKFlat.py -a PromptSelector -l SampleLists/triLepSamples.txt --skim SkimTree_SS2lOR3l -n 10 -e ${ERA} --userflags $CHANNEL,RunSyst, --memory $MEMORY --python &
+SKFlat.py -a PromptSelector -l SampleLists/triLepSamples.txt --skim SkimTree_SS2lOR3l -n 10 -e ${ERA} --userflags $CHANNEL,RunSyst --memory $MEMORY --python &
+SKFlat.py -a PromptSelector -l SampleLists/signalSamples.txt -n 10 -e ${ERA} --userflags $CHANNEL,RunSyst --memory $MEMORY --python &

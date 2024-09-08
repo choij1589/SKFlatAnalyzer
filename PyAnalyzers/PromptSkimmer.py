@@ -33,27 +33,16 @@ class PromptSkimmer(TriLeptonBase):
         ## Systematic Sources
         self.systematics = [("Central",)]
         # Weight Varitaions
-        if self.skim == "Skim1E2Mu":
-            self.weightVariations = []
-            self.weightVariations.append(("L1PrefireUp", "L1PrefireDown"))
-            self.weightVariations.append(("PileupReweightUp", "PileupReweightDown"))
-            self.weightVariations.append(("MuonIDSFUp", "MuonIDSFDown"))
-            self.weightVariations.append(("ElectronIDSFUp", "ElectronIDSFDown"))
-            self.weightVariations.append(("TriggerSFUp", "TriggerSFDown"))
-            self.weightVariations.append(("HeavyTagUpUnCorr", "HeavyTagDownUnCorr"))
-            self.weightVariations.append(("HeavyTagUpCorr", "HeavyTagDownCorr"))
-            self.weightVariations.append(("LightTagUpUnCorr", "LightTagDownUnCorr"))
-            self.weightVariations.append(("LightTagUpCorr", "LightTagDownCorr"))
-        if self.skim == "Skim3Mu":
-            self.weightVariations = []
-            self.weightVariations.append(("L1PrefireUp", "L1PrefireDown"))
-            self.weightVariations.append(("PileupReweightUp", "PileupReweightDown"))
-            self.weightVariations.append(("MuonIDSFUp", "MuonIDSFDown"))
-            self.weightVariations.append(("TriggerSFUp", "TriggerSFDown"))
-            self.weightVariations.append(("HeavyTagUpUnCorr", "HeavyTagDownUnCorr"))
-            self.weightVariations.append(("HeavyTagUpCorr", "HeavyTagDownCorr"))
-            self.weightVariations.append(("LightTagUpUnCorr", "LightTagDownUnCorr"))
-            self.weightVariations.append(("LightTagUpCorr", "LightTagDownCorr"))
+        self.weightVariations = []
+        self.weightVariations.append(("L1PrefireUp", "L1PrefireDown"))
+        self.weightVariations.append(("PileupReweightUp", "PileupReweightDown"))
+        self.weightVariations.append(("MuonIDSFUp", "MuonIDSFDown"))
+        self.weightVariations.append(("ElectronIDSFUp", "ElectronIDSFDown"))
+        self.weightVariations.append(("TriggerSFUp", "TriggerSFDown"))
+        self.weightVariations.append(("HeavyTagUpUnCorr", "HeavyTagDownUnCorr"))
+        self.weightVariations.append(("HeavyTagUpCorr", "HeavyTagDownCorr"))
+        self.weightVariations.append(("LightTagUpUnCorr", "LightTagDownUnCorr"))
+        self.weightVariations.append(("LightTagUpCorr", "LightTagDownCorr"))
         # Scale Variations
         self.scaleVariations = []
         self.scaleVariations.append(("JetResUp", "JetResDown"))
