@@ -7,6 +7,7 @@ void TriLeptonBase::initializeAnalyzer() {
     Skim1E2Mu = HasFlag("Skim1E2Mu");
     Skim3Mu = HasFlag("Skim3Mu");
     RunSyst = HasFlag("RunSyst");
+    RunTheoryUnc = HasFlag("RunTheoryUnc");
     //DenseNet = HasFlag("DenseNet");
     //GraphNet = HasFlag("GraphNet");
     //ScaleVar = HasFlag("ScaleVar");

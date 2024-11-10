@@ -50,8 +50,16 @@ class PromptSkimmer(TriLeptonBase):
         self.scaleVariations.append(("ElectronResUp", "ElectronResDown"))
         self.scaleVariations.append(("ElectronEnUp", "ElectronEnDown"))
         self.scaleVariations.append(("MuonEnUp", "MuonEnDown"))
+        self.alphas_variations = ["AlpS_down", "AlpS_up", "AlpSfact_down", "AlpSfact_up"]
         if not self.IsDATA:
             self.systematics += self.weightVariations + self.scaleVariations
+            
+        # For Theory Uncertanties
+        self.NPDF = 100
+        self.NALPHAS = 2
+        self.NALPSFACT = 2
+        self.NSCALE = 9
+        self.NPSSYST = 4
       
         ## Output Tree
         self.__prepareTTree()
@@ -122,22 +130,75 @@ class PromptSkimmer(TriLeptonBase):
                 self.weight["TriggerSFUp"][0] = w_norm * w_l1prefire * w_pileup * sf_muonid * sf_eleid * sf_trig_up * sf_btag
                 self.weight["TriggerSFDown"][0] = w_norm * w_l1prefire * w_pileup * sf_muonid * sf_eleid * sf_trig_down * sf_btag
                 
-                for syst in [var for syst_set in self.weightVariations for var in syst_set]:
-                    self.mass1[syst][0] = self.mass1["Central"][0]
-                    self.mass2[syst][0] = self.mass2["Central"][0]
+                for weight_syst in [var for syst_set in self.weightVariations for var in syst_set]:
+                    self.mass1[weight_syst][0] = self.mass1["Central"][0]
+                    self.mass2[weight_syst][0] = self.mass2["Central"][0]
                     for SIG in self.sigStrings:
-                        self.scoreX[f"{SIG}_{syst}"][0] = self.scoreX[f"{SIG}_Central"][0]
-                        self.scoreY[f"{SIG}_{syst}"][0] = self.scoreY[f"{SIG}_Central"][0]
-                        self.scoreZ[f"{SIG}_{syst}"][0] = self.scoreZ[f"{SIG}_Central"][0]
-                    self.tree[syst].Fill()
-        
+                        self.scoreX[f"{SIG}_{weight_syst}"][0] = self.scoreX[f"{SIG}_Central"][0]
+                        self.scoreY[f"{SIG}_{weight_syst}"][0] = self.scoreY[f"{SIG}_Central"][0]
+                        self.scoreZ[f"{SIG}_{weight_syst}"][0] = self.scoreZ[f"{SIG}_Central"][0]
+                    self.tree[weight_syst].Fill()
+                
+                if not self.RunTheoryUnc: return
+                
+                # PDF
+                for pdf_idx in range(self.NPDF):
+                    pdf_syst = f"PDFReweight_{pdf_idx}"
+                    self.weight[pdf_syst][0] = w_norm * w_l1prefire * w_pileup * sf_muonid * sf_eleid * sf_trig * sf_btag * self.weight_PDF.at(pdf_idx)
+                    self.mass1[pdf_syst][0] = self.mass1["Central"][0]
+                    self.mass2[pdf_syst][0] = self.mass2["Central"][0]
+                    for SIG in self.sigStrings:
+                        self.scoreX[f"{SIG}_{pdf_syst}"][0] = self.scoreX[f"{SIG}_Central"][0]
+                        self.scoreY[f"{SIG}_{pdf_syst}"][0] = self.scoreY[f"{SIG}_Central"][0]
+                        self.scoreZ[f"{SIG}_{pdf_syst}"][0] = self.scoreZ[f"{SIG}_Central"][0]
+                    self.tree[pdf_syst].Fill()
+                
+                # AlphaS
+                self.weight["AlpS_down"][0] = w_norm * w_l1prefire * w_pileup * sf_muonid * sf_eleid * sf_trig * sf_btag * self.weight_AlphaS.at(0)
+                self.weight["AlpS_up"][0] = w_norm * w_l1prefire * w_pileup * sf_muonid * sf_eleid * sf_trig * sf_btag * self.weight_AlphaS.at(1)
+                self.weight["AlpSfact_down"][0] = w_norm * w_l1prefire * w_pileup * sf_muonid * sf_eleid * sf_trig * sf_btag * self.weight_alpsfact.at(0)
+                self.weight["AlpSfact_up"][0] = w_norm * w_l1prefire * w_pileup * sf_muonid * sf_eleid * sf_trig * sf_btag * self.weight_alpsfact.at(1)
+                for alphas_syst in self.alphas_variations:
+                    self.mass1[alphas_syst][0] = self.mass1["Central"][0]
+                    self.mass2[alphas_syst][0] = self.mass2["Central"][0]
+                    for SIG in self.sigStrings:
+                        self.scoreX[f"{SIG}_{alphas_syst}"][0] = self.scoreX[f"{SIG}_Central"][0]
+                        self.scoreY[f"{SIG}_{alphas_syst}"][0] = self.scoreY[f"{SIG}_Central"][0]
+                        self.scoreZ[f"{SIG}_{alphas_syst}"][0] = self.scoreZ[f"{SIG}_Central"][0]
+                    self.tree[alphas_syst].Fill()
+                    
+                # Renormalization and Factorization Scale
+                for scale_idx in range(self.NSCALE):
+                    if scale_idx == 5 or scale_idx == 7: continue
+                    scale_syst = f"ScaleVar_{scale_idx}"
+                    self.weight[scale_syst][0] = w_norm * w_l1prefire * w_pileup * sf_muonid * sf_eleid * sf_trig * sf_btag * self.weight_Scale.at(scale_idx)
+                    self.mass1[scale_syst][0] = self.mass1["Central"][0]
+                    self.mass2[scale_syst][0] = self.mass2["Central"][0]
+                    for SIG in self.sigStrings:
+                        self.scoreX[f"{SIG}_{scale_syst}"][0] = self.scoreX[f"{SIG}_Central"][0]
+                        self.scoreY[f"{SIG}_{scale_syst}"][0] = self.scoreY[f"{SIG}_Central"][0]
+                        self.scoreZ[f"{SIG}_{scale_syst}"][0] = self.scoreZ[f"{SIG}_Central"][0]
+                    self.tree[scale_syst].Fill()
+                
+                # Parton Shower
+                for ps_idx in range(self.NPSSYST):
+                    ps_syst = f"PSVar_{ps_idx}"
+                    self.weight[ps_syst][0] = w_norm * w_l1prefire * w_pileup * sf_muonid * sf_eleid * sf_trig * sf_btag * self.weight_PSSyst.at(ps_idx)
+                    self.mass1[ps_syst][0] = self.mass1["Central"][0]
+                    self.mass2[ps_syst][0] = self.mass2["Central"][0]
+                    for SIG in self.sigStrings:
+                        self.scoreX[f"{SIG}_{ps_syst}"][0] = self.scoreX[f"{SIG}_Central"][0]
+                        self.scoreY[f"{SIG}_{ps_syst}"][0] = self.scoreY[f"{SIG}_Central"][0]
+                        self.scoreZ[f"{SIG}_{ps_syst}"][0] = self.scoreZ[f"{SIG}_Central"][0]
+                    self.tree[ps_syst].Fill()
+
         if self.IsDATA:
-            processEvent("Central", prepare_weight_variations=False)
+            processEvent("Central")
         else:
             processEvent("Central", prepare_weight_variations=True)
             for syst_up, syst_down in self.scaleVariations:
-                processEvent(syst_up, prepare_weight_variations=False)
-                processEvent(syst_down, prepare_weight_variations=False)        
+                processEvent(syst_up)
+                processEvent(syst_down)
         
     def L1PrefireWeights(self, prepare_weight_variations=False):
         w_l1prefire = self.GetPrefireWeight(0)
@@ -232,6 +293,88 @@ class PromptSkimmer(TriLeptonBase):
             self.weight[syst] = array("d", [0.]); thisTree.Branch("weight", self.weight[syst], "weight/D")
             thisTree.SetDirectory(0)
             self.tree[syst] = thisTree
+            
+        if not self.RunTheoryUnc: return
+        
+        # AlphaS variations
+        for syst in self.alphas_variations:
+            thisTree = TTree(f"Events_{syst}", "")
+            self.mass1[syst] = array("d", [0.]); thisTree.Branch("mass1", self.mass1[syst], "mass1/D")
+            self.mass2[syst] = array("d", [0.]); thisTree.Branch("mass2", self.mass2[syst], "mass2/D")
+            for SIG in self.sigStrings:
+                # vs nonprompt
+                self.scoreX[f"{SIG}_{syst}"] = array("d", [0.])
+                thisTree.Branch(f"score_{SIG}_vs_nonprompt", self.scoreX[f"{SIG}_{syst}"], f"score_{SIG}_vs_nonprompt/D")
+                # vs diboson
+                self.scoreY[f"{SIG}_{syst}"] = array("d", [0.])
+                thisTree.Branch(f"score_{SIG}_vs_diboson", self.scoreY[f"{SIG}_{syst}"], f"score_{SIG}_vs_diboson/D")
+                # vs ttZ
+                self.scoreZ[f"{SIG}_{syst}"] = array("d", [0.])
+                thisTree.Branch(f"score_{SIG}_vs_ttZ", self.scoreZ[f"{SIG}_{syst}"], f"score_{SIG}_vs_ttZ/D")
+            self.weight[syst] = array("d", [0.]); thisTree.Branch("weight", self.weight[syst], "weight/D")
+            thisTree.SetDirectory(0)
+            self.tree[syst] = thisTree
+        
+        # PDF
+        for pdf_idx in range(self.NPDF):
+            syst = f"PDFReweight_{pdf_idx}"
+            thisTree = TTree(f"Events_{syst}", "")
+            self.mass1[syst] = array("d", [0.]); thisTree.Branch("mass1", self.mass1[syst], "mass1/D")
+            self.mass2[syst] = array("d", [0.]); thisTree.Branch("mass2", self.mass2[syst], "mass2/D")
+            for SIG in self.sigStrings:
+                # vs nonprompt
+                self.scoreX[f"{SIG}_{syst}"] = array("d", [0.])
+                thisTree.Branch(f"score_{SIG}_vs_nonprompt", self.scoreX[f"{SIG}_{syst}"], f"score_{SIG}_vs_nonprompt/D")
+                # vs diboson
+                self.scoreY[f"{SIG}_{syst}"] = array("d", [0.])
+                thisTree.Branch(f"score_{SIG}_vs_diboson", self.scoreY[f"{SIG}_{syst}"], f"score_{SIG}_vs_diboson/D")
+                # vs ttZ
+                self.scoreZ[f"{SIG}_{syst}"] = array("d", [0.])
+                thisTree.Branch(f"score_{SIG}_vs_ttZ", self.scoreZ[f"{SIG}_{syst}"], f"score_{SIG}_vs_ttZ/D")
+            self.weight[syst] = array("d", [0.]); thisTree.Branch("weight", self.weight[syst], "weight/D")
+            thisTree.SetDirectory(0)
+            self.tree[syst] = thisTree
+        
+        # Renormalization and Factorization Scale
+        for scale_idx in range(self.NSCALE):
+            if scale_idx == 5 or scale_idx == 7: continue
+            syst = f"ScaleVar_{scale_idx}"
+            thisTree = TTree(f"Events_{syst}", "")
+            self.mass1[syst] = array("d", [0.]); thisTree.Branch("mass1", self.mass1[syst], "mass1/D")
+            self.mass2[syst] = array("d", [0.]); thisTree.Branch("mass2", self.mass2[syst], "mass2/D")
+            for SIG in self.sigStrings:
+                # vs nonprompt
+                self.scoreX[f"{SIG}_{syst}"] = array("d", [0.])
+                thisTree.Branch(f"score_{SIG}_vs_nonprompt", self.scoreX[f"{SIG}_{syst}"], f"score_{SIG}_vs_nonprompt/D")
+                # vs diboson
+                self.scoreY[f"{SIG}_{syst}"] = array("d", [0.])
+                thisTree.Branch(f"score_{SIG}_vs_diboson", self.scoreY[f"{SIG}_{syst}"], f"score_{SIG}_vs_diboson/D")
+                # vs ttZ
+                self.scoreZ[f"{SIG}_{syst}"] = array("d", [0.])
+                thisTree.Branch(f"score_{SIG}_vs_ttZ", self.scoreZ[f"{SIG}_{syst}"], f"score_{SIG}_vs_ttZ/D")
+            self.weight[syst] = array("d", [0.]); thisTree.Branch("weight", self.weight[syst], "weight/D")
+            thisTree.SetDirectory(0)
+            self.tree[syst] = thisTree
+            
+        # Parton Shower
+        for ps_idx in range(self.NPSSYST):
+            syst = f"PSVar_{ps_idx}"
+            thisTree = TTree(f"Events_{syst}", "")
+            self.mass1[syst] = array("d", [0.]); thisTree.Branch("mass1", self.mass1[syst], "mass1/D")
+            self.mass2[syst] = array("d", [0.]); thisTree.Branch("mass2", self.mass2[syst], "mass2/D")
+            for SIG in self.sigStrings:
+                # vs nonprompt
+                self.scoreX[f"{SIG}_{syst}"] = array("d", [0.])
+                thisTree.Branch(f"score_{SIG}_vs_nonprompt", self.scoreX[f"{SIG}_{syst}"], f"score_{SIG}_vs_nonprompt/D")
+                # vs diboson
+                self.scoreY[f"{SIG}_{syst}"] = array("d", [0.])
+                thisTree.Branch(f"score_{SIG}_vs_diboson", self.scoreY[f"{SIG}_{syst}"], f"score_{SIG}_vs_diboson/D")
+                # vs ttZ
+                self.scoreZ[f"{SIG}_{syst}"] = array("d", [0.])
+                thisTree.Branch(f"score_{SIG}_vs_ttZ", self.scoreZ[f"{SIG}_{syst}"], f"score_{SIG}_vs_ttZ/D")
+            self.weight[syst] = array("d", [0.]); thisTree.Branch("weight", self.weight[syst], "weight/D")
+            thisTree.SetDirectory(0)
+            self.tree[syst] = thisTree
         
     def __initTreeContents(self):
         for syst in [var for syst_set in self.systematics for var in syst_set]:
@@ -240,6 +383,52 @@ class PromptSkimmer(TriLeptonBase):
             for SIG in self.sigStrings:
                 self.scoreX[f"{SIG}_{syst}"][0] = -999.
                 self.scoreY[f"{SIG}_{syst}"][0] = -999.
+                self.scoreZ[f"{SIG}_{syst}"][0] = -999.
+            self.weight[syst][0] = -999.
+        
+        if not self.RunTheoryUnc: return
+        # AlphaS
+        for syst in self.alphas_variations:
+            self.mass1[syst][0] = -999.
+            self.mass2[syst][0] = -999.
+            for SIG in self.sigStrings:
+                self.scoreX[f"{SIG}_{syst}"][0] = -999.
+                self.scoreY[f"{SIG}_{syst}"][0] = -999.
+                self.scoreZ[f"{SIG}_{syst}"][0] = -999.
+            self.weight[syst][0] = -999.
+        
+        # PDF
+        for pdf_idx in range(self.NPDF):
+            syst = f"PDFReweight_{pdf_idx}"
+            self.mass1[syst][0] = -999.
+            self.mass2[syst][0] = -999.
+            for SIG in self.sigStrings:
+                self.scoreX[f"{SIG}_{syst}"][0] = -999.
+                self.scoreY[f"{SIG}_{syst}"][0] = -999.
+                self.scoreZ[f"{SIG}_{syst}"][0] = -999.
+            self.weight[syst][0] = -999.
+        
+        # Renormalization and Factorization Scale
+        for scale_idx in range(self.NSCALE):
+            if scale_idx == 5 or scale_idx == 7: continue
+            syst = f"ScaleVar_{scale_idx}"
+            self.mass1[syst][0] = -999.
+            self.mass2[syst][0] = -999.
+            for SIG in self.sigStrings:
+                self.scoreX[f"{SIG}_{syst}"][0] = -999.
+                self.scoreY[f"{SIG}_{syst}"][0] = -999.
+                self.scoreZ[f"{SIG}_{syst}"][0] = -999.
+            self.weight[syst][0] = -999.
+        
+        # Parton Shower
+        for ps_idx in range(self.NPSSYST):
+            syst = f"PSVar_{ps_idx}"
+            self.mass1[syst][0] = -999.
+            self.mass2[syst][0] = -999.
+            for SIG in self.sigStrings:
+                self.scoreX[f"{SIG}_{syst}"][0] = -999.
+                self.scoreY[f"{SIG}_{syst}"][0] = -999.
+                self.scoreZ[f"{SIG}_{syst}"][0] = -999.
             self.weight[syst][0] = -999.
             
     def defineObjects(self, rawMuons, rawElectrons, rawJets, syst="Central"):
@@ -396,6 +585,27 @@ class PromptSkimmer(TriLeptonBase):
     def WriteHist(self):
         self.outfile.cd()
         for syst in [var for syst_set in self.systematics for var in syst_set]:
+            self.tree[syst].Write()
+        
+        if not self.RunTheoryUnc: return
+        # AlphaS
+        for syst in self.alphas_variations:
+            self.tree[syst].Write()
+            
+        # PDF
+        for pdf_idx in range(self.NPDF):
+            syst = f"PDFReweight_{pdf_idx}"
+            self.tree[syst].Write()
+        
+        # Renormalization and Factorization Scale
+        for scale_idx in range(self.NSCALE):
+            if scale_idx == 5 or scale_idx == 7: continue
+            syst = f"ScaleVar_{scale_idx}"
+            self.tree[syst].Write()
+        
+        # Parton Shower
+        for ps_idx in range(self.NPSSYST):
+            syst = f"PSVar_{ps_idx}"
             self.tree[syst].Write()
             
         
