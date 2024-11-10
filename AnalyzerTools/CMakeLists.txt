@@ -1,10 +1,13 @@
-# find LHAPDF
-set(LHAPDF_INCLUDE_DIR $ENV{LHAPDFDIR}/include)
-set(LHAPDF_LIBRARY $ENV{LHAPDFDIR}/lib/libLHAPDF.so)
+if (APPLE)
+    set(LIB_EXT "dylib")
+else()
+    set(LIB_EXT "so")
+endif()
 
 # include ROOT and LHAPDF
-include_directories(${ROOT_INCLUDE_DIRS})
+set(LHAPDF_INCLUDE_DIR $ENV{LHAPDF_INCLUDE_DIR})
 include_directories(${LHAPDF_INCLUDE_DIR})
+include_directories(${ROOT_INCLUDE_DIRS})
 
 # Generate the ROOT dictionary before defining the library
 file(GLOB HEADERS include/*.h)
@@ -27,6 +30,7 @@ target_include_directories(AnalyzerTools PUBLIC
 )
 
 # Link ROOT and lhapdf libraries
+set(LHAPDF_LIBRARY $ENV{LHAPDF_LIB_DIR}/libLHAPDF.${LIB_EXT})
 target_link_libraries(AnalyzerTools ${ROOT_LIBRARIES})
 target_link_libraries(AnalyzerTools ${LHAPDF_LIBRARY})
 target_link_libraries(AnalyzerTools DataFormats)

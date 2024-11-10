@@ -10,3 +10,6 @@ add_subdirectory(DataFormats)
 add_subdirectory(AnalyzerTools)
 add_subdirectory(external/GEScaleSyst)
 add_subdirectory(Analyzers)
+
+set_target_properties(AnalyzerTools PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations")
+set_target_properties(Analyzers PROPERTIES COMPILE_FLAGS "-Wno-parentheses-equality")

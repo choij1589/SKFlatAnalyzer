@@ -1,5 +1,12 @@
-RELEASE="`cat /etc/redhat-release`"
-echo "@@@@ Working in $HOSTNAME"
+#!/bin/bash
+export HOSTNAME=`hostname`
+if [[ $HOSTNAME == *"Mac"* ]]; then
+    RELEASE=""
+else
+    RELEASE="`cat /etc/redhat-release`"
+fi
+
+echo "@@@@ Working in `hostname`"
 if [[ $HOSTNAME == *"ai-tamsa"* ]]; then
   export SKFlat_WD="/data6/Users/$USER/SKFlatAnalyzer"
   export SKFlatRunlogDir="/gv0/Users/$USER/SKFlatRunlog"
@@ -35,6 +42,15 @@ elif [[ $HOSTNAME == *"private"* ]]; then
   # root configuration
   source ~/.conda-activate
   conda activate pyg
+elif [[ $HOSTNAME == *"Mac"* ]]; then
+  export SKFlat_WD="/Users/$USER/workspace/SKFlatAnalyzer"
+  export SKFlatRunlogDir="/Users/$USER/workspace/SKFlatRunlog"
+  export SKFlatOutputDir="/Users/$USER/workspace/SKFlatOutput"
+  # root configuration
+  source ~/myenv/bin/activate
+  export ROOTSYS=$(brew --prefix root)
+  export PATH=$ROOTSYS/bin:$PATH
+  export PYTHONPATH=$ROOTSYS/lib/root:$PYTHONPATH
 else
   echo "Unknown hostname $HOSTNAME"
   exit 1
@@ -52,13 +68,30 @@ alias skout="cd $SKFlatOutputDir/$SKFlatV"
 
 export MYBIN=$SKFlat_WD/bin/
 export PYTHONDIR=$SKFlat_WD/python/
-export LHAPDFDIR=$SKFlat_WD/external/lhapdf
-export LHAPDF_DATA_PATH=$LHAPDFDIR/data
 export PATH=${MYBIN}:${PYTHONDIR}:${LHAPDFDIR}/bin:${PATH}
 export PYTHONPATH="${PYTHONPATH}:${PYTHONDIR}"
 
+# setting LHAPDF
+if [[ -d "external/lhapdf" ]]; then
+    export PATH=$PATH:$SKFlat_WD/external/lhapdf/bin
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SKFlat_WD/external/lhapdf/lib
+    export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$SKFlat_WD/external/lhapdf/lib
+    export LHAPDF_DATA_PATH=$SKFlat_WD/external/lhapdf/share/LHAPDF
+else
+    export LHAPDFDIR=$SKFlat_WD/external/lhapdf
+    export LHAPDF_DATA_PATH=$LHAPDFDIR/data
+fi
+export LHAPDF_INCLUDE_DIR=`lhapdf-config --incdir`
+export LHAPDF_LIB_DIR=`lhapdf-config --libdir`
+
+echo "@@@@ LHAPDF include: $LHAPDF_INCLUDE_DIR"
+echo "@@@@ LHAPDF lib: $LHAPDF_LIB_DIR"
+echo "@@@@ reading data from $LHAPDF_DATA_PATH"
+
+
 export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$SKFlat_WD/DataFormats/include/:$SKFlat_WD/AnalyzerTools/include/:$SKFlat_WD/Analyzers/include/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SKFlat_LIB_PATH:$LHAPDFDIR/lib
+export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$SKFlat_LIB_PATH:$LHAPDFDIR/lib
 source $SKFlat_WD/bin/BashColorSets.sh
 
 ## submodules ##
