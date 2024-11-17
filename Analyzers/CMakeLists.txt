@@ -1,6 +1,12 @@
 # find LHAPDF
-set(LHAPDF_INCLUDE_DIR $ENV{LHAPDFDIR}/include)
-set(LHAPDF_LIBRARY $ENV{LHAPDFDIR}/lib/libLHAPDF.so)
+if (APPLE)
+    set(LIB_EXT "dylib")
+else()
+    set(LIB_EXT "so")
+endif()
+
+set(LHAPDF_INCLUDE_DIR $ENV{LHAPDF_INCLUDE_DIR})
+set(LHAPDF_LIBRARY $ENV{LHAPDF_LIB_DIR}/libLHAPDF.${LIB_EXT})
 set(GEScaleSyst_DIR $ENV{SKFlat_WD}/external/GEScaleSyst)
 
 # include ROOT

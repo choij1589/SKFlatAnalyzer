@@ -7,14 +7,11 @@ void TriLeptonBase::initializeAnalyzer() {
     Skim1E2Mu = HasFlag("Skim1E2Mu");
     Skim3Mu = HasFlag("Skim3Mu");
     RunSyst = HasFlag("RunSyst");
-    RunNewPDF = HasFlag("RunNewPDF");
-    RunXsecSyst = HasFlag("RunXSecSyst");
-
-    cout << "[TriLeptonBase::initializeAnalyzer] Skim1E2Mu = " << Skim1E2Mu << endl;
-    cout << "[TriLeptonBase::initializeAnalyzer] Skim3Mu = " << Skim3Mu << endl;
-    cout << "[TriLeptonBase::initializeAnalyzer] RunSyst = " << RunSyst << endl;
-    cout << "[TriLeptonBase::initializeAnalyzer] RunNewPDF = " << RunNewPDF << endl;
-    cout << "[TriLeptonBase::initializeAnalyzer] RunXsecSyst = " << RunXsecSyst << endl;
+    RunTheoryUnc = HasFlag("RunTheoryUnc");
+    //DenseNet = HasFlag("DenseNet");
+    //GraphNet = HasFlag("GraphNet");
+    //ScaleVar = HasFlag("ScaleVar");
+    //WeightVar = HasFlag("WeightVar");
 
     // triggers & ID settings
     if (DataEra == "2016preVFP") {
