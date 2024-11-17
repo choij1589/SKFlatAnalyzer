@@ -32,6 +32,7 @@ class PromptSkimmer(TriLeptonBase):
         
         ## Systematic Sources
         self.systematics = [("Central",)]
+        
         # Weight Varitaions
         self.weightVariations = []
         self.weightVariations.append(("L1PrefireUp", "L1PrefireDown"))
@@ -43,6 +44,7 @@ class PromptSkimmer(TriLeptonBase):
         self.weightVariations.append(("HeavyTagUpCorr", "HeavyTagDownCorr"))
         self.weightVariations.append(("LightTagUpUnCorr", "LightTagDownUnCorr"))
         self.weightVariations.append(("LightTagUpCorr", "LightTagDownCorr"))
+        
         # Scale Variations
         self.scaleVariations = []
         self.scaleVariations.append(("JetResUp", "JetResDown"))
@@ -50,6 +52,7 @@ class PromptSkimmer(TriLeptonBase):
         self.scaleVariations.append(("ElectronResUp", "ElectronResDown"))
         self.scaleVariations.append(("ElectronEnUp", "ElectronEnDown"))
         self.scaleVariations.append(("MuonEnUp", "MuonEnDown"))
+        
         if not self.IsDATA:
             self.systematics += self.weightVariations + self.scaleVariations
       

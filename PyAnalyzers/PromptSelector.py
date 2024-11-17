@@ -22,6 +22,8 @@ class PromptSelector(TriLeptonBase):
         if self.Skim1E2Mu: self.skim = "Skim1E2Mu"
         if self.Skim3Mu:   self.skim = "Skim3Mu"
         if self.RunSyst:   self.run_syst = True
+        if self.RunNewPDF: self.run_newpdf = True
+        if self.RunXsecSyst: self.run_xsecsyst = True
         if not self.skim in ["Skim1E2Mu", "Skim3Mu"]:
             raise ValueError(f"Invalid skim {self.skim}")
         
