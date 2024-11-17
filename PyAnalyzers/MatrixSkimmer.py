@@ -4,11 +4,11 @@ from ROOT import TTree
 from ROOT import TString
 from ROOT.std import vector
 from ROOT.JetTagging import Parameters as jParameters
-from ROOT import Lepton, Muon, Electron, Jet, Particle
+from ROOT import Lepton, Muon, Electron, Jet
 
-from itertools import product
 from array import array
-from MLTools.helpers import loadModels
+from itertools import product
+from MLTools.helpers import loadParticleNet
 from MLTools.helpers import getGraphInput, getGraphScore
 
 class MatrixSkimmer(TriLeptonBase):
@@ -24,10 +24,10 @@ class MatrixSkimmer(TriLeptonBase):
         if self.skim not in ["Skim1E2Mu", "Skim3Mu"]:
             raise ValueError("Invalid skim option")
         
-        self.network = "GraphNeuralNet"
+        self.network = "ParticleNet"
         self.sigStrings = ["MHc-160_MA-85", "MHc-130_MA-90", "MHc-100_MA-95"]
         self.bkgStrings = ["nonprompt", "diboson", "ttZ"]
-        self.models = loadModels(self.network, self.skim, self.sigStrings, self.bkgStrings)
+        self.models = loadParticleNet("Combined", self.sigStrings, self.bkgStrings)
         self.__prepareTTree()
         
     def executeEvent(self):
@@ -47,7 +47,7 @@ class MatrixSkimmer(TriLeptonBase):
 
         if not channel: return
         pairs = self.makePair(looseMuons)
-        _, scores = self.evalScore(looseMuons, looseElectrons, jets, bjets, METv)
+        _, scores, fold = self.evalScore(looseMuons, looseElectrons, jets, bjets, METv)
         
         if channel == "SR1E2Mu":
             self.mass1["Central"][0] = pairs.M()  
@@ -60,7 +60,7 @@ class MatrixSkimmer(TriLeptonBase):
             self.scoreX[f"{SIG}_Central"][0] = scores[f"{SIG}_vs_nonprompt"]
             self.scoreY[f"{SIG}_Central"][0] = scores[f"{SIG}_vs_diboson"]
             self.scoreZ[f"{SIG}_Central"][0] = scores[f"{SIG}_vs_ttZ"]
-        
+        self.fold["Central"][0] = fold
         self.weight["Central"][0] = self.getFakeWeight(looseMuons, looseElectrons, syst="Central")
         self.tree["Central"].Fill()
     
@@ -71,6 +71,7 @@ class MatrixSkimmer(TriLeptonBase):
         self.scoreX = {}
         self.scoreY = {}
         self.scoreZ = {}
+        self.fold = {}
         self.weight = {}
 
         tree = TTree(f"Events_Central", "")
@@ -86,6 +87,7 @@ class MatrixSkimmer(TriLeptonBase):
             # vs ttZ
             self.scoreZ[f"{SIG}_Central"] = array("d", [0.])
             tree.Branch(f"score_{SIG}_vs_ttZ", self.scoreZ[f"{SIG}_Central"], f"score_{SIG}_vs_ttZ/D")
+        self.fold["Central"] = array("i", [0]); tree.Branch("fold", self.fold["Central"], "fold/I")
         self.weight["Central"] = array("d", [0.]); tree.Branch("weight", self.weight["Central"], "weight/D")
         tree.SetDirectory(0)
         self.tree["Central"] = tree
@@ -97,6 +99,7 @@ class MatrixSkimmer(TriLeptonBase):
             self.scoreX[f"{SIG}_Central"][0] = -999.
             self.scoreY[f"{SIG}_Central"][0] = -999.
             self.scoreZ[f"{SIG}_Central"][0] = -999.
+        self.fold["Central"][0] = -999
         self.weight["Central"][0] = -999.
         
     def defineObjects(self, rawMuons, rawElectrons, rawJets, syst="Central"):
@@ -206,10 +209,10 @@ class MatrixSkimmer(TriLeptonBase):
     #### Get scores for each event
     def evalScore(self, muons, electrons, jets, bjets, METv):
         scores = {}
-        data = getGraphInput(muons, electrons, jets, bjets, METv)
+        data, fold = getGraphInput(muons, electrons, jets, bjets, METv, self.DataEra)
         for sig, bkg in product(self.sigStrings, self.bkgStrings):
-            scores[f"{sig}_vs_{bkg}"] = getGraphScore(self.models[f"{sig}_vs_{bkg}"], data)
-        return data, scores
+            scores[f"{sig}_vs_{bkg}"] = getGraphScore(self.models[f"{sig}_vs_{bkg}-fold{fold}"], data)
+        return data, scores, fold
 
     def WriteHist(self):
         self.outfile.cd()

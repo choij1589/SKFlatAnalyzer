@@ -12,7 +12,7 @@ else
     exit 1
 fi
 
-#SKFlat.py -a PromptSkimmer -i $DATASTREAM --skim SkimTree_SS2lOR3l -n 10 -e ${ERA} --userflags $CHANNEL --memory $MEMORY --python &
-#SKFlat.py -a MatrixSkimmer -i $DATASTREAM --skim SkimTree_SS2lOR3l -n 10 -e ${ERA} --userflags $CHANNEL --memory $MEMORY --python &
-#SKFlat.py -a PromptSkimmer -l SampleLists/triLepSamples.txt --skim SkimTree_SS2lOR3l -n 10 -e ${ERA} --userflags $CHANNEL --memory $MEMORY --python &
+SKFlat.py -a PromptSkimmer -i $DATASTREAM --skim SkimTree_SS2lOR3l -n 10 -e ${ERA} --userflags $CHANNEL --memory $MEMORY --python &
+SKFlat.py -a MatrixSkimmer -i $DATASTREAM --skim SkimTree_SS2lOR3l -n 10 -e ${ERA} --userflags $CHANNEL --memory $MEMORY --python &
+SKFlat.py -a PromptSkimmer -l SampleLists/triLepSamples.txt --skim SkimTree_SS2lOR3l -n 10 -e ${ERA} --userflags $CHANNEL --memory $MEMORY --python &
 SKFlat.py -a PromptSkimmer -l SampleLists/signalSamples.txt -n 10 -e ${ERA} --userflags $CHANNEL,RunTheoryUnc --memory $MEMORY --python &

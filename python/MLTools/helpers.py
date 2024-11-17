@@ -3,12 +3,12 @@ import numpy as np
 import pandas as pd
 import torch
 from torch_geometric.data import Data
-from ROOT import TLorentzVector, TMath
+from ROOT import TLorentzVector, TMath, TRandom3
 from itertools import product, combinations
-from MLTools.models import SNN, ParticleNetV2
+from MLTools.models import SNN, ParticleNet, ParticleNetV2
 from MLTools.formats import NodeParticle
 
-def getEdgeIndices(nodeList, k):
+def getEdgeIndices(nodeList, k=4):
     edgeIndex = []
     edgeAttribute = []
     for i, node in enumerate(nodeList):
@@ -76,6 +76,20 @@ def loadModels(network, channel, signals, backgrounds):
         model.load_state_dict(torch.load(modelPath, map_location=torch.device("cpu")))
         model.eval()
         models[f"{sig}_vs_{bkg}"] = model
+    return models
+
+def loadParticleNet(channel, signals, backgrounds, nfold=5):
+    models = {}
+    for sig, bkg in product(signals, backgrounds):
+        for fold in range(nfold):
+            modelPath = f"{os.environ['DATA_DIR']}/Classifiers/ParticleNet/{channel}/{sig}_vs_{bkg}/fold-{fold}/ParticleNet.pt"
+            # Get num_hidden from the info file
+            with open(f"{os.environ['DATA_DIR']}/Classifiers/ParticleNet/{channel}/{sig}_vs_{bkg}/fold-{fold}/summary.txt", "r") as f:
+                num_hidden = int(f.readlines()[0].split(", ")[3])
+            model = ParticleNet(9, 4, 2, num_hidden=num_hidden, dropout_p=0.25)
+            model.load_state_dict(torch.load(modelPath, map_location=torch.device("cpu")))
+            model.eval()
+            models[f"{sig}_vs_{bkg}-fold{fold}"] = model
     return models
 
 def getDenseInput(muons, electrons, jets, bjets, METv):
@@ -205,7 +219,7 @@ def MT(part1, part2):
     dPhi = part1.DeltaPhi(part2)
     return TMath.Sqrt(2*part1.Pt()*part2.Pt()*(1.-TMath.Cos(dPhi)))
 
-def getGraphInput(muons, electrons, jets, bjets, METv):
+def getGraphInput(muons, electrons, jets, bjets, METv, era, nFolds=5):
     particles = []
     for muon in muons:
         node = NodeParticle()
@@ -236,20 +250,27 @@ def getGraphInput(muons, electrons, jets, bjets, METv):
                          particle.IsMuon(), particle.IsElectron(), particle.IsJet()])
     data = evtToGraph(nodeList, y=None, k=4)
     
-    if muons.size() == 3:
-        MT1 = MT(muons.at(0), METv)
-        MT2 = MT(muons.at(1), METv)
-        MT3 = MT(muons.at(2), METv)
-        data.graph_input = torch.tensor([[jets.size(), bjets.size(), METv.Pt(), MT1, MT2, MT3]], dtype=torch.float)
-    elif electrons.size() == 1 and muons.size() == 2:
-        MT1 = MT(electrons.at(0), METv)
-        MT2 = MT(muons.at(0), METv)
-        MT3 = MT(muons.at(1), METv)
-        data.graph_input = torch.tensor([[jets.size(), bjets.size(), METv.Pt(), MT1, MT2, MT3]], dtype=torch.float)
+    if era == "2016preVFP":
+        eraIdx = torch.tensor([[1, 0, 0, 0]], dtype=torch.float)
+    elif era == "2016postVFP":
+        eraIdx = torch.tensor([[0, 1, 0, 0]], dtype=torch.float)
+    elif era == "2017":
+        eraIdx = torch.tensor([[0, 0, 1, 0]], dtype=torch.float)
+    elif era == "2018":
+        eraIdx = torch.tensor([[0, 0, 0, 1]], dtype=torch.float)
     else:
-        print(f"Wrong size of muons {muons.size()} and electrons {electrons.size()}")
-        raise(ValueError)
-    return data
+        raise ValueError(f"Wrong era {era}")
+    data.graph_input = eraIdx
+
+    ## Get fold information
+    randGen = TRandom3()
+    seed = int(METv.Pt())+1
+    randGen.SetSeed(seed)
+    fold = -999
+    for _ in range(len(jets)):
+        fold = randGen.Integer(nFolds)
+    
+    return data, fold
 
 def getGraphScore(model, data):
     with torch.no_grad():

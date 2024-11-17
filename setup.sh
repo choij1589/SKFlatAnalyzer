@@ -1,12 +1,12 @@
 #!/bin/bash
-export HOSTNAME=`hostname`
-if [[ $HOSTNAME == *"Mac"* ]]; then
-    RELEASE=""
-else
-    RELEASE="`cat /etc/redhat-release`"
-fi
+#export HOSTNAME=`hostname`
+#if [[ $HOSTNAME == *"Mac"* ]]; then
+#    RELEASE=""
+#else
+RELEASE="`cat /etc/redhat-release`"
+#fi
 
-echo "@@@@ Working in `hostname`"
+echo "@@@@ Working in $HOSTNAME"
 if [[ $HOSTNAME == *"ai-tamsa"* ]]; then
   export SKFlat_WD="/data6/Users/$USER/SKFlatAnalyzer"
   export SKFlatRunlogDir="/gv0/Users/$USER/SKFlatRunlog"
