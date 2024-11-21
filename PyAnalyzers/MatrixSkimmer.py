@@ -25,7 +25,7 @@ class MatrixSkimmer(TriLeptonBase):
             raise ValueError("Invalid skim option")
         
         self.network = "ParticleNet"
-        self.sigStrings = ["MHc-160_MA-85", "MHc-130_MA-90", "MHc-100_MA-95"]
+        self.sigStrings = ["MHc-130_MA-90", "MHc-160_MA-85", "MHc-100_MA-95"]
         self.bkgStrings = ["nonprompt", "diboson", "ttZ"]
         self.models = loadParticleNet("Combined", self.sigStrings, self.bkgStrings)
         self.__prepareTTree()

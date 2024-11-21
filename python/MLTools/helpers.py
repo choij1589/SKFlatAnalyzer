@@ -16,7 +16,6 @@ def getEdgeIndices(nodeList, k=4):
         for j, other in enumerate(nodeList):
             if node is other:    # same node
                 continue
-
             thisNode = TLorentzVector()
             otherNode = TLorentzVector()
             thisNode.SetPxPyPzE(node[1], node[2], node[3], node[0])
@@ -273,6 +272,7 @@ def getGraphInput(muons, electrons, jets, bjets, METv, era, nFolds=5):
     return data, fold
 
 def getGraphScore(model, data):
+    model.eval()
     with torch.no_grad():
         out = model(data.x, data.edge_index, data.graph_input)
     return out.numpy()[0][1]
