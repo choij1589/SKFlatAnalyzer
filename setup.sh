@@ -3,6 +3,7 @@
 #if [[ $HOSTNAME == *"Mac"* ]]; then
 #    RELEASE=""
 #else
+HOSTNAME=`hostname`
 RELEASE="`cat /etc/redhat-release`"
 #fi
 

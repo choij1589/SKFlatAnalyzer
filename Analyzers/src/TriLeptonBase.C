@@ -152,25 +152,6 @@ void TriLeptonBase::initializeAnalyzer() {
     vector<JetTagging::Parameters> jtps;
     jtps.emplace_back(JetTagging::Parameters(JetTagging::DeepJet, JetTagging::Medium, JetTagging::incl, JetTagging::mujets));
     mcCorr->SetJetTaggingParameters(jtps);
-
-    if (RunNewPDF && !IsDATA) {
-        LHAPDFHandler LHAPDFHandler_Prod;
-        LHAPDFHandler_Prod.CentralPDFName = "NNPDF31_nnlo_hessian_pdfas";
-        LHAPDFHandler_Prod.init();
-
-        LHAPDFHandler LHAPDFHandler_New;
-        LHAPDFHandler_New.CentralPDFName = "NNPDF31_nlo_hessian_pdfas";
-        LHAPDFHandler_New.ErrorSetMember_Start = 1;
-        LHAPDFHandler_New.ErrorSetMember_End = 100;
-        LHAPDFHandler_New.AlphaSMember_Down = 101;
-        LHAPDFHandler_New.AlphaSMember_Up = 102;
-        LHAPDFHandler_New.init();
-
-        pdfReweight->SetProdPDF(LHAPDFHandler_Prod.PDFCentral);
-        pdfReweight->SetNewPDF(LHAPDFHandler_New.PDFCentral);
-        pdfReweight->SetNewPDFErrorSet(LHAPDFHandler_New.PDFErrorSet);
-        pdfReweight->SetNewPDFAlphaS(LHAPDFHandler_New.PDFAlphaSDown, LHAPDFHandler_New.PDFAlphaSUp);
-    }
 }
 
 void TriLeptonBase::executeEvent() {
