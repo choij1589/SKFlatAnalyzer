@@ -29,6 +29,7 @@ private:
 
     // jets
     unsigned int nJets;
+    unsigned int nBtagged;
     float JetPtColl[20];
     float JetEtaColl[20];
     float JetPhiColl[20];
@@ -40,6 +41,7 @@ private:
 
 public:
     bool Skim1E2Mu, Skim3Mu;
+    bool OnlyBtagged;
     bool MatchChargedHiggs;
     vector<TString> ElectronIDs, MuonIDs;
     vector<TString> DblMuTriggers, EMuTriggers;

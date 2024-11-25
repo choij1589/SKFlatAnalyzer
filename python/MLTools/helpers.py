@@ -85,6 +85,7 @@ def loadParticleNet(channel, signals, backgrounds, nfold=5):
             # Get num_hidden from the info file
             with open(f"{os.environ['DATA_DIR']}/Classifiers/ParticleNet/{channel}/{sig}_vs_{bkg}/fold-{fold}/summary.txt", "r") as f:
                 num_hidden = int(f.readlines()[0].split(", ")[3])
+            print(sig, bkg, fold, modelPath)
             model = ParticleNet(9, 4, 2, num_hidden=num_hidden, dropout_p=0.25)
             model.load_state_dict(torch.load(modelPath, map_location=torch.device("cpu")))
             model.eval()

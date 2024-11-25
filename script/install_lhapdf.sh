@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # clear the lhapdf directory
 rm -rf $SKFlat_WD/external/lhapdf
 

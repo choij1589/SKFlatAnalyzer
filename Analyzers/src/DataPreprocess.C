@@ -28,6 +28,7 @@ DataPreprocess::DataPreprocess() {
 
     // jets
     Events->Branch("nJets", &nJets);
+    Events->Branch("nBtagged", &nBtagged);
     Events->Branch("JetPtColl", JetPtColl, "JetPtColl[nJets]/F");
     Events->Branch("JetEtaColl", JetEtaColl, "JetEtaColl[nJets]/F");
     Events->Branch("JetPhiColl", JetPhiColl, "JetPhiColl[nJets]/F");
@@ -47,6 +48,7 @@ void DataPreprocess::initializeAnalyzer() {
     //MatchChargedHiggs = HasFlag("MatchChargedHiggs"); // deprecated
     Skim1E2Mu = HasFlag("Skim1E2Mu");
     Skim3Mu = HasFlag("Skim3Mu");
+    OnlyBtagged = HasFlag("OnlyBtagged");
 
     // triggers & ID settings
     if (DataEra == "2016preVFP") {
@@ -126,6 +128,7 @@ void DataPreprocess::executeEvent() {
         if (! (pair.M() > 12.)) return;
         if (! (60 < pair.M() && pair.M() < 120)) return;
         if (! (jets.size() >= 2)) return;
+        if (OnlyBtagged && !(bjets.size() >= 1)) return;
         channel = "SR1E2Mu";
     }
     // Reduced baseline for 3Mu channel
@@ -157,6 +160,7 @@ void DataPreprocess::executeEvent() {
         if (! (pair2.M() > 12.)) return;
         if (! ((60 < pair1.M() && pair1.M() < 120) || (60 < pair2.M() && pair2.M() < 120))) return;
         if (! (jets.size() >= 2)) return;
+        if (OnlyBtagged && !(bjets.size() >= 1)) return;
         channel = "SR3Mu";
     }
     // end event selection
@@ -194,6 +198,7 @@ void DataPreprocess::executeEvent() {
         ElectronLabelColl[i] = false;
     }
     nJets = jets.size();
+    nBtagged = bjets.size();
     for (unsigned int i = 0; i < nJets; i++) {
         const Jet &jet = jets.at(i);
         JetPtColl[i] = jet.Pt();

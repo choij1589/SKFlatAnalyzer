@@ -1,5 +1,4 @@
-#!/bin/sh
-# check hostname
+#!/bin/bash
 if [[ "$HOSTNAME" == "tamsa"* ]]; then
     source /data6/Users/choij/SKFlatAnalyzer/setup.sh
 fi

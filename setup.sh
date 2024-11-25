@@ -3,7 +3,7 @@
 #if [[ $HOSTNAME == *"Mac"* ]]; then
 #    RELEASE=""
 #else
-HOSTNAME=`hostname`
+#HOSTNAME=`hostname`
 RELEASE="`cat /etc/redhat-release`"
 #fi
 
@@ -25,7 +25,6 @@ elif [[ $HOSTNAME == *"tamsa"* ]]; then
     source /opt/conda/bin/activate
     conda activate pyg
   else
-    # Host machines
     # temporarily use ROOT and python from LCG environment
     source /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-centos7-gcc12-opt/setup.sh
   fi
@@ -90,8 +89,8 @@ echo "@@@@ reading data from $LHAPDF_DATA_PATH"
 
 export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$SKFlat_WD/DataFormats/include/:$SKFlat_WD/AnalyzerTools/include/:$SKFlat_WD/Analyzers/include/
 export PATH=${MYBIN}:${PYTHONDIR}:${LHAPDFDIR}/bin:${PATH}
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SKFlat_LIB_PATH:$LHAPDFDIR/lib
-export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$SKFlat_LIB_PATH:$LHAPDFDIR/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SKFlat_LIB_PATH:$LHAPDF_LIB_DIR
+export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$SKFlat_LIB_PATH:$LHAPDF_LIB_DIR
 source $SKFlat_WD/bin/BashColorSets.sh
 ## submodules ##
 #source bin/CheckSubmodules.sh
