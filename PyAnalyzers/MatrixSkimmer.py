@@ -27,7 +27,7 @@ class MatrixSkimmer(TriLeptonBase):
         self.network = "ParticleNet"
         self.sigStrings = ["MHc-130_MA-90", "MHc-160_MA-85", "MHc-100_MA-95"]
         self.bkgStrings = ["nonprompt", "diboson", "ttZ"]
-        self.models = loadParticleNet("Combined__", self.sigStrings, self.bkgStrings, pilot=["MHc-130_MA-90_vs_nonprompt"])
+        self.models = loadParticleNet("Combined__", self.sigStrings, self.bkgStrings, pilot=True)
         self.__prepareTTree()
         
     def executeEvent(self):
@@ -210,10 +210,7 @@ class MatrixSkimmer(TriLeptonBase):
         data, fold = getGraphInput(muons, electrons, jets, bjets, METv, self.DataEra)
         for sig, bkg in product(self.sigStrings, self.bkgStrings):
             score = getGraphScore(self.models[f"{sig}_vs_{bkg}-fold{fold}"], data)
-            #print(f"{sig}_vs_{bkg}: {score}")
             scores[f"{sig}_vs_{bkg}"] = score
-        score = getGraphScore(self.models[f"MHc-130_MA-90_vs_nonprompt"], data)
-        print(score)
         return data, scores, fold
 
     def WriteHist(self):
