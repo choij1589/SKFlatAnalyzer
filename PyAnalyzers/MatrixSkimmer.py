@@ -27,7 +27,7 @@ class MatrixSkimmer(TriLeptonBase):
         self.network = "ParticleNet"
         self.sigStrings = ["MHc-130_MA-90", "MHc-160_MA-85", "MHc-100_MA-95"]
         self.bkgStrings = ["nonprompt", "diboson", "ttZ"]
-        self.models = loadParticleNet("Combined", self.sigStrings, self.bkgStrings)
+        self.models = loadParticleNet("Combined__", self.sigStrings, self.bkgStrings, pilot=["MHc-130_MA-90_vs_nonprompt"])
         self.__prepareTTree()
         
     def executeEvent(self):
@@ -111,9 +111,9 @@ class MatrixSkimmer(TriLeptonBase):
         vetoMuons = self.SelectMuons(allMuons, self.MuonIDs[2], 10., 2.4)
         looseMuons = self.SelectMuons(vetoMuons, self.MuonIDs[1], 10., 2.4)
         tightMuons = self.SelectMuons(looseMuons, self.MuonIDs[0], 10., 2.4)
-        vetoElectrons = self.SelectElectrons(allElectrons, self.ElectronIDs[2], 10., 2.5)
-        looseElectrons = self.SelectElectrons(vetoElectrons, self.ElectronIDs[1], 10., 2.5)
-        tightElectrons = self.SelectElectrons(looseElectrons, self.ElectronIDs[0], 10., 2.5)
+        vetoElectrons = self.SelectElectrons(allElectrons, self.ElectronIDs[2], 15., 2.5)
+        looseElectrons = self.SelectElectrons(vetoElectrons, self.ElectronIDs[1], 15., 2.5)
+        tightElectrons = self.SelectElectrons(looseElectrons, self.ElectronIDs[0], 15., 2.5)
         jets = self.SelectJets(allJets, "tight", 20., 2.4)
         jets = self.JetsVetoLeptonInside(jets, vetoElectrons, vetoMuons, 0.4)
         bjets = vector[Jet]()
@@ -153,10 +153,8 @@ class MatrixSkimmer(TriLeptonBase):
         ## 4. At least two jets, at least one b-jet
         if self.skim == "Skim1E2Mu":
             if not event.PassTrigger(super().EMuTriggers): return 
-            leptons = vector[Lepton]()
-            for mu in looseMuons: leptons.emplace_back(mu)
-            for ele in looseElectrons: leptons.emplace_back(ele)
-            mu1, mu2, ele = tuple(leptons)
+            mu1, mu2 = tuple(looseMuons)
+            ele = looseElectrons.at(0)
             passLeadMu = mu1.Pt() > 25. and ele.Pt() > 15.
             passLeadEle = mu1.Pt() > 10. and ele.Pt() > 25.
             passSafeCut = passLeadMu or passLeadEle
@@ -211,7 +209,11 @@ class MatrixSkimmer(TriLeptonBase):
         scores = {}
         data, fold = getGraphInput(muons, electrons, jets, bjets, METv, self.DataEra)
         for sig, bkg in product(self.sigStrings, self.bkgStrings):
-            scores[f"{sig}_vs_{bkg}"] = getGraphScore(self.models[f"{sig}_vs_{bkg}-fold{fold}"], data)
+            score = getGraphScore(self.models[f"{sig}_vs_{bkg}-fold{fold}"], data)
+            #print(f"{sig}_vs_{bkg}: {score}")
+            scores[f"{sig}_vs_{bkg}"] = score
+        score = getGraphScore(self.models[f"MHc-130_MA-90_vs_nonprompt"], data)
+        print(score)
         return data, scores, fold
 
     def WriteHist(self):
