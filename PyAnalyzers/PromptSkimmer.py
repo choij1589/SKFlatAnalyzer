@@ -28,7 +28,7 @@ class PromptSkimmer(TriLeptonBase):
         self.network = "ParticleNet"
         self.sigStrings = ["MHc-160_MA-85", "MHc-130_MA-90", "MHc-100_MA-95"]
         self.bkgStrings = ["nonprompt", "diboson", "ttZ"]
-        self.models = loadParticleNet("Combined", self.sigStrings, self.bkgStrings)
+        self.models = loadParticleNet("Combined__", self.sigStrings, self.bkgStrings)
         
         ## Systematic Sources
         self.systematics = [("Central",)]
@@ -53,7 +53,7 @@ class PromptSkimmer(TriLeptonBase):
         self.scaleVariations.append(("ElectronEnUp", "ElectronEnDown"))
         self.scaleVariations.append(("MuonEnUp", "MuonEnDown"))
 
-# WARNING: Unclustered Energy Varaitions are not integrated in the current version
+        # WARNING: Unclustered Energy Varaitions are not integrated in the current version
         # When integrating unclustered energy variation, you should check "Central" METvPt passed to find the fold
         # Since int(METv.Pt)+1 is used to find the fold and should not vary due to the difference scale of METv value
         #self.scaleVariations.append(("UnclusteredEnUp", "UnclusteredEnDown"))
@@ -472,8 +472,8 @@ class PromptSkimmer(TriLeptonBase):
 
         vetoMuons = self.SelectMuons(allMuons, self.MuonIDs[2], 10., 2.4)
         tightMuons = self.SelectMuons(vetoMuons, self.MuonIDs[0], 10., 2.4)
-        vetoElectrons = self.SelectElectrons(allElectrons, self.ElectronIDs[2], 10., 2.5)
-        tightElectrons = self.SelectElectrons(vetoElectrons, self.ElectronIDs[0], 10., 2.5)
+        vetoElectrons = self.SelectElectrons(allElectrons, self.ElectronIDs[2], 15., 2.5)
+        tightElectrons = self.SelectElectrons(vetoElectrons, self.ElectronIDs[0], 15., 2.5)
         jets = self.SelectJets(allJets, "tight", 20., 2.4)
         jets = self.JetsVetoLeptonInside(jets, vetoElectrons, vetoMuons, 0.4)
         bjets = vector[Jet]()

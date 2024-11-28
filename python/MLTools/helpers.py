@@ -77,7 +77,7 @@ def loadModels(network, channel, signals, backgrounds):
         models[f"{sig}_vs_{bkg}"] = model
     return models
 
-def loadParticleNet(channel, signals, backgrounds, nfold=5):
+def loadParticleNet(channel, signals, backgrounds, pilot=[], nfold=5):
     models = {}
     for sig, bkg in product(signals, backgrounds):
         for fold in range(nfold):
@@ -90,6 +90,17 @@ def loadParticleNet(channel, signals, backgrounds, nfold=5):
             model.load_state_dict(torch.load(modelPath, map_location=torch.device("cpu")))
             model.eval()
             models[f"{sig}_vs_{bkg}-fold{fold}"] = model
+    
+    for name in pilot:
+        modelPath = f"{os.environ['DATA_DIR']}/Classifiers/ParticleNet/{channel}/{name}/pilot/ParticleNet.pt"
+        with open(f"{os.environ['DATA_DIR']}/Classifiers/ParticleNet/{channel}/{name}/pilot/summary.txt", "r") as f:
+            num_hidden = int(f.readlines()[0].split(", ")[3])
+        print(name, modelPath)
+        model = ParticleNet(9, 4, 2, num_hidden=num_hidden, dropout_p=0.25)
+        model.load_state_dict(torch.load(modelPath, map_location=torch.device("cpu"), weights_only=False))
+        model.eval()
+        models[name] = model
+
     return models
 
 def getDenseInput(muons, electrons, jets, bjets, METv):
@@ -277,4 +288,3 @@ def getGraphScore(model, data):
     with torch.no_grad():
         out = model(data.x, data.edge_index, data.graph_input)
     return out.numpy()[0][1]
-
