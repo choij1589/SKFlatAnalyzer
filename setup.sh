@@ -71,7 +71,7 @@ export PYTHONPATH="${PYTHONPATH}:${PYTHONDIR}"
 
 # setting LHAPDF
 if [[ -d "external/lhapdf" ]]; then
-    #export PATH=$PATH:$SKFlat_WD/external/lhapdf/bin
+    export PATH=$PATH:$SKFlat_WD/external/lhapdf/bin
     #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SKFlat_WD/external/lhapdf/lib
     #export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$SKFlat_WD/external/lhapdf/lib
     export LHAPDFDIR=$SKFlat_WD/external/lhapdf
