@@ -28,7 +28,7 @@ class PromptSkimmer(TriLeptonBase):
         self.network = "ParticleNet"
         self.sigStrings = ["MHc-160_MA-85", "MHc-130_MA-90", "MHc-100_MA-95"]
         self.bkgStrings = ["nonprompt", "diboson", "ttZ"]
-        self.models = loadParticleNet("Combined__", self.sigStrings, self.bkgStrings, pilot=True)
+        self.models = loadParticleNet("Combined__", self.sigStrings, self.bkgStrings, pilot=False)
         
         ## Systematic Sources
         self.systematics = [("Central",)]
