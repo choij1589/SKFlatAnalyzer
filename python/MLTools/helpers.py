@@ -4,6 +4,7 @@ import pandas as pd
 import torch
 from torch_geometric.data import Data
 from ROOT import TLorentzVector, TMath, TRandom3
+import pickle
 from itertools import product, combinations
 from MLTools.models import SNN, ParticleNet, ParticleNetV2
 from MLTools.formats import NodeParticle
@@ -96,6 +97,15 @@ def loadParticleNet(channel, signals, backgrounds, nfold=5, pilot=False):
             model.eval()
             models[f"{sig}_vs_{bkg}-fold{fold}"] = model
     
+    return models
+
+def loadGBDTClassifier(era, channel, signals):
+    models = {}
+    for sig in signals:
+        modelPath = f"{os.environ['DATA_DIR']}/{era}/classifiers/{channel}/{sig}/models.pkl"
+        with open(modelPath, "rb") as f:
+            model = pickle.load(f)
+        models[sig] = model
     return models
 
 def getDenseInput(muons, electrons, jets, bjets, METv):

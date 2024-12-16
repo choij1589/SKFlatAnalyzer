@@ -5,8 +5,9 @@ from ROOT.std import vector
 from ROOT.JetTagging import Parameters as jParameters
 from ROOT import Lepton, Muon, Electron, Jet
 
+import numpy as np
 from itertools import product
-from MLTools.helpers import loadModels
+from MLTools.helpers import loadParticleNet, loadGBDTClassifier
 from MLTools.helpers import getGraphInput, getGraphScore
 
 class PromptSelector(TriLeptonBase):
@@ -21,47 +22,46 @@ class PromptSelector(TriLeptonBase):
         self.run_syst = False
         if self.Skim1E2Mu: self.skim = "Skim1E2Mu"
         if self.Skim3Mu:   self.skim = "Skim3Mu"
-        if self.RunSyst:   self.run_syst = True
-        if self.RunNewPDF: self.run_newpdf = True
-        if self.RunXsecSyst: self.run_xsecsyst = True
-        if not self.skim in ["Skim1E2Mu", "Skim3Mu"]:
-            raise ValueError(f"Invalid skim {self.skim}")
+        if self.skim not in ["Skim1E2Mu", "Skim3Mu"]:
+            raise ValueError("Invalid skim option")
+        
+        if self.RunSyst: self.run_syst = True
         
         # Systematics
         self.weightVariations = ["Central"]
         self.scaleVariations = []
         if self.run_syst:
-            if self.skim == "Skim1E2Mu":
-                # Add PDF!
-                self.weightVariations.append(("L1PrefireUp", "L1PrefireDown"))
-                self.weightVariations.append(("PileupReweightUp", "PileupReweightDown"))
-                self.weightVariations.append(("MuonIDSFUp", "MuonIDSFDown"))
-                self.weightVariations.append(("ElectronIDSFUp", "ElectronIDSFDown"))
-                self.weightVariations.append(("EMuTrigSFUp", "EMuTrigSFDown"))
-                self.weightVariations.append(("HeavyTagUpUnCorr", "HeavyTagDownUnCorr"))
-                self.weightVariations.append(("HeavyTagUpCorr", "HeavyTagDownCorr"))
-                self.weightVariations.append(("LightTagUpUnCorr", "LightTagDownUnCorr"))
-                self.weightVariations.append(("LightTagUpCorr", "LightTagDownCorr")) 
-            if self.skim == "Skim3Mu":
-                self.weightVariations.append(("L1PrefireUp", "L1PrefireDown"))
-                self.weightVariations.append(("PileupReweightUp", "PileupReweightDown"))
-                self.weightVariations.append(("MuonIDSFUp", "MuonIDSFDown"))
-                self.weightVariations.append(("DblMuTrigSFUp", "DblMuTrigSFDown"))
-                self.weightVariations.append(("HeavyTagUpUnCorr", "HeavyTagDownUnCorr"))
-                self.weightVariations.append(("HeavyTagUpCorr", "HeavyTagDownCorr"))
-                self.weightVariations.append(("LightTagUpUnCorr", "LightTagDownUnCorr"))
-                self.weightVariations.append(("LightTagUpCorr", "LightTagDownCorr"))
             self.scaleVariations.append(("JetResUp", "JetResDown"))
             self.scaleVariations.append(("JetEnUp", "JetEnDown"))
             self.scaleVariations.append(("ElectronResUp", "ElectronResDown"))
             self.scaleVariations.append(("ElectronEnUp", "ElectronEnDown"))
             self.scaleVariations.append(("MuonEnUp", "MuonEnDown"))
+        if self.run_syst and self.skim == "Skim1E2Mu":
+            self.weightVariations.append(("L1PrefireUp", "L1PrefireDown"))
+            self.weightVariations.append(("PileupReweightUp", "PileupReweightDown"))
+            self.weightVariations.append(("MuonIDSFUp", "MuonIDSFDown"))
+            self.weightVariations.append(("ElectronIDSFUp", "ElectronIDSFDown"))
+            self.weightVariations.append(("TriggerSFUp", "TriggerSFDown"))
+            self.weightVariations.append(("HeavyTagUpUnCorr", "HeavyTagDownUnCorr"))
+            self.weightVariations.append(("HeavyTagUpCorr", "HeavyTagDownCorr"))
+            self.weightVariations.append(("LightTagUpUnCorr", "LightTagDownUnCorr"))
+            self.weightVariations.append(("LightTagUpCorr", "LightTagDownCorr"))
+        if self.run_syst and self.skim == "Skim3Mu":
+            self.weightVariations.append(("L1PrefireUp", "L1PrefireDown"))
+            self.weightVariations.append(("PileupReweightUp", "PileupReweightDown"))
+            self.weightVariations.append(("MuonIDSFUp", "MuonIDSFDown"))
+            self.weightVariations.append(("DblMuTrigSFUp", "DblMuTrigSFDown"))
+            self.weightVariations.append(("HeavyTagUpUnCorr", "HeavyTagDownUnCorr"))
+            self.weightVariations.append(("HeavyTagUpCorr", "HeavyTagDownCorr"))
+            self.weightVariations.append(("LightTagUpUnCorr", "LightTagDownUnCorr"))
+            self.weightVariations.append(("LightTagUpCorr", "LightTagDownCorr"))
         self.systematics = self.weightVariations + self.scaleVariations
-            
+        
         # Load ML models
-        self.signalStrings = ["MHc-100_MA-95", "MHc-130_MA-90", "MHc-160_MA-85"]
-        self.backgroundStrings = ["nonprompt", "diboson", "ttZ"]
-        self.models = loadModels("GraphNeuralNet", self.skim, self.signalStrings, self.backgroundStrings)
+        self.sigStrings = ["MHc-100_MA-95", "MHc-130_MA-90", "MHc-160_MA-85"]
+        self.bkgStrings = ["nonprompt", "diboson", "ttZ"]
+        self.models = loadParticleNet("Combined__", self.sigStrings, self.bkgStrings, pilot=False)
+        self.classifiers = loadGBDTClassifier(self.DataEra, self.skim.replace("Skim", "SR"), self.sigStrings)
     
     def executeEvent(self):
         if not self.PassMETFilter(): return
@@ -78,28 +78,29 @@ class PromptSelector(TriLeptonBase):
             if not channel: return
             
             # Evaluate scores
-            data, scores = self.evalScore(tightMuons, tightElectrons, jets, bjets, METv)
+            data, scores, fold = self.evalScore(tightMuons, tightElectrons, jets, bjets, METv)
             objects = {"muons": tightMuons,
                        "electrons": tightElectrons,
                        "jets": jets,
                        "bjets": bjets,
                        "METv": METv,
                        "data": data,
-                       "scores": scores
+                       "scores": scores,
+                       "fold": fold
             }
             if apply_weight_variation:
                 assert syst == "Central", "Only Central weight variation is allowed"
                 weight = self.getWeight(channel, ev, tightMuons, tightElectrons, jets)
-                self.FillObjects(channel, objects, weight, syst)
+                self.fillObjects(channel, objects, weight, syst)
                 for systSet in self.weightVariations[1:]:
                     syst_up, syst_down = systSet
                     weight_up = self.getWeight(channel, ev, tightMuons, tightElectrons, jets, syst_up)
                     weight_down = self.getWeight(channel, ev, tightMuons, tightElectrons, jets, syst_down)
-                    self.FillObjects(channel, objects, weight_up, syst_up)
-                    self.FillObjects(channel, objects, weight_down, syst_down)
+                    self.fillObjects(channel, objects, weight_up, syst_up)
+                    self.fillObjects(channel, objects, weight_down, syst_down)
             else:
                 weight = self.getWeight(channel, ev, tightMuons, tightElectrons, jets)
-                self.FillObjects(channel, objects, weight, syst)
+                self.fillObjects(channel, objects, weight, syst)
         
         processEvent("Central", apply_weight_variation=True)
         for systSet in self.scaleVariations:
@@ -255,13 +256,21 @@ class PromptSelector(TriLeptonBase):
             return mu2, mu3, mu1
         else:
             raise EOFError(f"wrong charge configuration {mu1.Charge()} {mu2.Charge()} {mu3.Charge()}")
-        
+    
     def evalScore(self, muons, electrons, jets, bjets, METv):
         scores = {}
-        data = getGraphInput(muons, electrons, jets, bjets, METv)
-        for sig, bkg in product(self.signalStrings, self.backgroundStrings):
-            scores[f"{sig}_vs_{bkg}"] = getGraphScore(self.models[f"{sig}_vs_{bkg}"], data)
-        return data, scores
+        data, fold = getGraphInput(muons, electrons, jets, bjets, METv, self.DataEra)
+        for sig, bkg in product(self.sigStrings, self.bkgStrings):
+            scores[f"{sig}_vs_{bkg}"] = getGraphScore(self.models[f"{sig}_vs_{bkg}-fold{fold}"], data)
+        
+        for sig in self.sigStrings:
+            scoreX = scores[f"{sig}_vs_nonprompt"]
+            scoreY = scores[f"{sig}_vs_diboson"]
+            scoreZ = scores[f"{sig}_vs_ttZ"]
+            score = self.classifiers[sig][fold].predict_proba(np.array([[scoreX, scoreY, scoreZ]]))[0][1]
+            scores[sig] = score
+        
+        return data, scores, fold
     
     def getWeight(self, channel, event, muons, electrons, jets, syst="Central"):
         weight = 1.
@@ -327,7 +336,7 @@ class PromptSelector(TriLeptonBase):
         
         return weight
     
-    def FillObjects(self, channel, objects, weight, syst):
+    def fillObjects(self, channel, objects, weight, syst):
         muons = objects["muons"]
         electrons = objects["electrons"]
         jets = objects["jets"]
@@ -441,7 +450,7 @@ class PromptSelector(TriLeptonBase):
             self.FillHist(f"{channel}/{syst}/nonprompt/eta", nonprompt.Eta(), weight, 48, -2.4, 2.4)
             self.FillHist(f"{channel}/{syst}/nonprompt/phi", nonprompt.Phi(), weight, 64, -3.2, 3.2)
             
-        for signal in self.signalStrings:
+        for signal in self.sigStrings:
             if "1E2Mu" in channel:
                 ACand = muons.at(0) + muons.at(1)
                 self.FillHist(f"{channel}/{syst}/{signal}/ACand/pt", ACand.Pt(), weight, 300, 0., 300.)
@@ -464,8 +473,10 @@ class PromptSelector(TriLeptonBase):
                 self.FillHist(f"{channel}/{syst}/{signal}/nACand/mass", nACand.M(), weight, 300, 0., 300.)
                 
             score_nonprompt = scores[f"{signal}_vs_nonprompt"]
-            score_diboson = scores[f"{signal}_vs_diboson"]
-            score_ttZ    = scores[f"{signal}_vs_ttZ"]
+            score_diboson   = scores[f"{signal}_vs_diboson"]
+            score_ttZ       = scores[f"{signal}_vs_ttZ"]
+            score           = scores[signal]
             self.FillHist(f"{channel}/{syst}/{signal}/score_nonprompt", score_nonprompt, weight, 100, 0., 1.)
             self.FillHist(f"{channel}/{syst}/{signal}/score_diboson", score_diboson, weight, 100, 0., 1.)
             self.FillHist(f"{channel}/{syst}/{signal}/score_ttZ", score_ttZ, weight, 100, 0., 1.)
+            self.FillHist(f"{channel}/{syst}/{signal}/score", score, weight, 100, 0., 1.)

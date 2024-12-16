@@ -5,8 +5,9 @@ from ROOT.std import vector
 from ROOT.JetTagging import Parameters as jParameters
 from ROOT import Lepton, Muon, Electron, Jet
 
+import numpy as np
 from itertools import product
-from MLTools.helpers import loadModels
+from MLTools.helpers import loadParticleNet, loadGBDTClassifier
 from MLTools.helpers import getGraphInput, getGraphScore
 
 class MatrixSelector(TriLeptonBase):
@@ -23,9 +24,10 @@ class MatrixSelector(TriLeptonBase):
         if not self.skim in ["Skim1E2Mu", "Skim3Mu"]:
             raise ValueError(f"Invalid skim flag: {self.skim}")
 
-        self.signalStrings = ["MHc-160_MA-85", "MHc-130_MA-90", "MHc-100_MA-95"]
-        self.backgroundStrings = ["nonprompt", "diboson", "ttZ"]
-        self.models = loadModels("GraphNeuralNet", self.skim, self.signalStrings, self.backgroundStrings)
+        self.sigStrings = ["MHc-100_MA-95", "MHc-130_MA-90", "MHc-160_MA-85"]
+        self.bkgStrings = ["nonprompt", "diboson", "ttZ"]
+        self.models = loadParticleNet("Combined__", self.sigStrings, self.bkgStrings, pilot=False)
+        self.classifiers = loadGBDTClassifier(self.DataEra, self.skim.replace("Skim", "SR"), self.sigStrings)
         
     def executeEvent(self):
         if not self.PassMETFilter(): return
@@ -35,23 +37,24 @@ class MatrixSelector(TriLeptonBase):
         rawJets = self.GetAllJets()
         METv = ev.GetMETVector()
         truth = None
-
+        
         vetoMuons, looseMuons, tightMuons, vetoElectrons, looseElectrons, tightElectrons, jets, bjets = self.defineObjects(rawMuons, rawElectrons, rawJets)
         channel = self.selectEvent(ev, truth, vetoMuons, looseMuons, tightMuons, vetoElectrons, looseElectrons, tightElectrons, jets, bjets, METv)
         if not channel: return
         
-        data, scores = self.evalScore(looseMuons, looseElectrons, jets, bjets, METv)
+        data, scores, fold = self.evalScore(looseMuons, looseElectrons, jets, bjets, METv)
         objects = {"muons": looseMuons,
                    "electrons": looseElectrons,
                    "jets": jets,
                    "bjets": bjets,
                    "METv": METv,
                    "data": data,
-                   "scores": scores
+                   "scores": scores,
+                   "fold": fold
         }
         weight = self.getFakeWeight(looseMuons, looseElectrons, syst="Central")
-        self.FillObjects(channel, objects, weight, syst="Central")
-        
+        self.fillObjects(channel, objects, weight, syst="Central")
+    
     def defineObjects(self, rawMuons, rawElectrons, rawJets):
         # first copy objects
         allMuons = rawMuons
@@ -148,7 +151,7 @@ class MatrixSelector(TriLeptonBase):
             isOnZ = abs(pair1.M() - 91.2) < 10. or abs(pair2.M() - 91.2) < 10.
             if isOnZ: return "ZFake3Mu"
             else:     return
-        
+    
     def configureChargeOf(self, muons):
         if not muons.size() == 3:
             raise NotImplementedError(f"wrong no. of muons {muons.size()}")
@@ -163,16 +166,23 @@ class MatrixSelector(TriLeptonBase):
             return mu2, mu3, mu1
         else:
             raise EOFError()
-
-    #### Get scores for each event
+        
     def evalScore(self, muons, electrons, jets, bjets, METv):
         scores = {}
-        data = getGraphInput(muons, electrons, jets, bjets, METv)
-        for sig, bkg in product(self.signalStrings, self.backgroundStrings):
-            scores[f"{sig}_vs_{bkg}"] = getGraphScore(self.models[f"{sig}_vs_{bkg}"], data)
-        return data, scores
+        data, fold = getGraphInput(muons, electrons, jets, bjets, METv, self.DataEra)
+        for sig, bkg in product(self.sigStrings, self.bkgStrings):
+            scores[f"{sig}_vs_{bkg}"] = getGraphScore(self.models[f"{sig}_vs_{bkg}-fold{fold}"], data)
+        
+        for sig in self.sigStrings:
+            scoreX = scores[f"{sig}_vs_nonprompt"]
+            scoreY = scores[f"{sig}_vs_diboson"]
+            scoreZ = scores[f"{sig}_vs_ttZ"]
+            score = self.classifiers[sig][fold].predict_proba(np.array([[scoreX, scoreY, scoreZ]]))[0][1]
+            scores[sig] = score
+        
+        return data, scores, fold
     
-    def FillObjects(self, channel, objects, weight, syst="Central"):
+    def fillObjects(self, channel, objects, weight, syst="Central"):
         muons = objects["muons"]
         electrons = objects["electrons"]
         jets = objects["jets"]
@@ -289,7 +299,7 @@ class MatrixSelector(TriLeptonBase):
             self.FillHist(f"{channel}/{syst}/nonprompt/phi", nonprompt.Phi(), weight, 64, -3.2, 3.2)
          
         # Fill signal dependent distributions 
-        for signal in self.signalStrings:
+        for signal in self.sigStrings:
             if "1E2Mu" in channel:
                 ACand = muons.at(0) + muons.at(1)
                 self.FillHist(f"{channel}/{syst}/{signal}/ACand/pt", ACand.Pt(), weight, 300, 0., 300.)
@@ -312,8 +322,10 @@ class MatrixSelector(TriLeptonBase):
                 self.FillHist(f"{channel}/{syst}/{signal}/nACand/mass", nACand.M(), weight, 300, 0., 300.)
             
             score_nonprompt = scores[f"{signal}_vs_nonprompt"]
-            score_diboson = scores[f"{signal}_vs_diboson"]
-            score_ttZ    = scores[f"{signal}_vs_ttZ"]
+            score_diboson   = scores[f"{signal}_vs_diboson"]
+            score_ttZ       = scores[f"{signal}_vs_ttZ"]
+            score           = scores[signal]
             self.FillHist(f"{channel}/{syst}/{signal}/score_nonprompt", score_nonprompt, weight, 100, 0., 1.)
             self.FillHist(f"{channel}/{syst}/{signal}/score_diboson", score_diboson, weight, 100, 0., 1.)
             self.FillHist(f"{channel}/{syst}/{signal}/score_ttZ", score_ttZ, weight, 100, 0., 1.)
+            self.FillHist(f"{channel}/{syst}/{signal}/score", score, weight, 100, 0., 1.)
