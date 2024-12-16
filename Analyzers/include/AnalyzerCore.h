@@ -213,6 +213,7 @@ public:
   static vector<int> TrackGenSelfHistory(const Gen& me, const std::vector<Gen>& gens);
   bool IsFromHadron(const Gen& me, const std::vector<Gen>& gens);
   int GetLeptonType(const Lepton& lep, const std::vector<Gen>& gens);
+  int GetLeptonType(const Gen& gen, const std::vector<Gen>& gens);
   int GetLeptonType_Public(int TruthIdx, const std::vector<Gen>& TruthColl);
   int GetGenPhotonType(const Gen& genph, const std::vector<Gen>& gens);
   static bool IsFinalPhotonSt23_Public(const std::vector<Gen>& TruthColl);

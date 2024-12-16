@@ -2068,6 +2068,16 @@ int AnalyzerCore::GetGenPhotonType(const Gen& genph, const std::vector<Gen>& gen
 //5) Photons radiated from lepton FSR. Sometimes they are quite energetic.
 }
 
+int AnalyzerCore::GetLeptonType(const Gen& gen, const std::vector<Gen>& gens){
+  int LeptonType = GetLeptonType_Public(gen.Index(), gens);//4)
+  if(LeptonType>=4 && LeptonType<=5){//5)
+    int NearbyPrElType = GetPrElType_InSameSCRange_Public(gen.Index(), gens);
+    if(NearbyPrElType>0) LeptonType = NearbyPrElType;
+  }
+  return LeptonType;
+}
+
+
 
 bool AnalyzerCore::IsFinalPhotonSt23_Public(const std::vector<Gen>& TruthColl){
 //In Some XG proc events, it is observed that some of photons' last status is 23. Presumably due to skimming of generator history between pythia and MiniAOD.
