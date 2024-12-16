@@ -9,15 +9,10 @@ gSystem.Load("/cvmfs/cms.cern.ch/slc7_amd64_gcc900/external/lhapdf/6.2.3/lib/lib
 ## Analyzer class for acceptance study
 class AcceptanceStudy(TriLeptonBase):
     def __init__(self):
-        ## call the constructors for TriLeptonBase -> AnalyzerCore -> SKFlatNtuple
         super().__init__()
-        # at this point, TriLeptonBase::initializeAnalyzer has not been activated
 
     def initializePyAnalyzer(self):
-        ## python mode initializeAnalyzer
         super().initializeAnalyzer()
-
-        # channel
         if super().Skim1E2Mu: self.channel = "Skim1E2Mu"
         elif super().Skim3Mu: self.channel = "Skim3Mu"
         else:
