@@ -1,6 +1,8 @@
 #ifndef Jet_h
 #define Jet_h
 
+#include <map>
+
 #include "Particle.h"
 #include "JetTaggingParameters.h"
 
@@ -22,6 +24,7 @@ public:
   void SetEnergyFractions(double cH, double nH, double nEM, double cEM, double muE);
   void SetMultiplicities(double cM, double nM);
   void SetPileupJetId(double v);
+  inline double PileupJetId() const { return j_PileupJetId; }
 
   void SetEnShift(double en_up, double en_down);
   inline double EnShift(int s) const {
@@ -46,6 +49,7 @@ public:
   void SetTightLepVetoJetID(double b);
   inline bool Pass_tightJetID() const { return j_tightJetID; }
   inline bool Pass_tightLepVetoJetID() const { return j_tightLepVetoJetID; }
+  bool Pass_PileupJetID(const TString era, const TString wp) const;
 
   bool PassID(TString ID) const;
 

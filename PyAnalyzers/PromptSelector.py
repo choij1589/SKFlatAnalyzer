@@ -138,8 +138,8 @@ class PromptSelector(TriLeptonBase):
         jets = self.JetsVetoLeptonInside(jets, vetoElectrons, vetoMuons, 0.4)
         bjets = vector[Jet]()
         for jet in jets:
-            btagScore = jet.GetTaggerResult(0)                  # DeepJet score 3
-            wp = self.mcCorr.GetJetTaggingCutValue(0, 2)     # DeepJet Medium 3 1
+            btagScore = jet.GetTaggerResult(3)                  # DeepJet score 3
+            wp = self.mcCorr.GetJetTaggingCutValue(3, 1)     # DeepJet Medium 3 1
             if btagScore > wp: bjets.emplace_back(jet)
             
         vetoMuons = vector[Muon](sorted(vetoMuons, key=lambda x: x.Pt(), reverse=True))

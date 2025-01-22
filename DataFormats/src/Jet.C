@@ -97,10 +97,101 @@ void Jet::SetTightLepVetoJetID(double b){
   j_tightLepVetoJetID = b;
 }
 
+// Pileup Jet ID
+// See https://twiki.cern.ch/twiki/bin/viewauth/CMS/PileupJetIDUL for more details
+bool Jet::Pass_PileupJetID(const TString era, const TString wp) const {
+  // Pileup Jet ID is trained for pt < 50 GeV
+  if (Pt() < 10.) {
+    std::cerr << "[Jet::Pass_PileupJetID] Pt is too small : " << Pt() << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  if (Pt() > 50.) return true;
+
+  struct PUJetIDCuts {
+    double eta2p5, eta2p75, eta3p0, eta5p0;
+  };
+  std::map<std::pair<double, double>, PUJetIDCuts> ptRangeCuts;
+  if (era == "2016preVFP" || era == "2016postVFP") {
+    if (wp == "tight") {
+      ptRangeCuts[make_pair(10., 20.)] = {0.71, -0.32, -0.30, -0.22};
+      ptRangeCuts[make_pair(20., 30.)] = {0.87, -0.08, -0.16, -0.12};
+      ptRangeCuts[make_pair(30., 40.)] = {0.94, 0.24, 0.05, 0.10};
+      ptRangeCuts[make_pair(40., 50.)] = {0.97, 0.48, 0.26, 0.29};
+    } else if (wp == "medium") {
+      ptRangeCuts[make_pair(10., 20.)] = {0.20, -0.56, -0.43, -0.38};
+      ptRangeCuts[make_pair(20., 30.)] = {0.62, -0.39, -0.32, -0.29};
+      ptRangeCuts[make_pair(30., 40.)] = {0.86, -0.10, -0.15, -0.08};
+      ptRangeCuts[make_pair(40., 50.)] = {0.93, 0.19, 0.04, 0.12};
+    } else if (wp == "loose") {
+      ptRangeCuts[make_pair(10., 20.)] = {-0.95, -0.70, -0.52, -0.49};
+      ptRangeCuts[make_pair(20., 30.)] = {-0.90, -0.57, -0.43, -0.42};
+      ptRangeCuts[make_pair(30., 40.)] = {-0.71, -0.36, -0.29, -0.23};
+      ptRangeCuts[make_pair(40., 50.)] = {-0.42, -0.09, -0.14, -0.02};
+    } else {
+      std::cerr << "[Jet::Pass_PileupJetID] Wrong WP : " << wp << std::endl;
+      exit(EXIT_FAILURE);
+    }
+  } else if (era == "2017" || era == "2018") {
+    if (wp == "tight") {
+      ptRangeCuts[make_pair(10., 20.)] = {0.77, 0.38, -0.31, -0.21};
+      ptRangeCuts[make_pair(20., 30.)] = {0.90, 0.60, -0.12, -0.13};
+      ptRangeCuts[make_pair(30., 40.)] = {0.96, 0.82, 0.20, 0.09};
+      ptRangeCuts[make_pair(40., 50.)] = {0.98, 0.92, 0.47, 0.29};
+    } else if (wp == "medium") {
+      ptRangeCuts[make_pair(10., 20.)] = {0.26, -0.33, -0.54, -0.37};
+      ptRangeCuts[make_pair(20., 30.)] = {0.68, -0.04, -0.43, -0.30};
+      ptRangeCuts[make_pair(30., 40.)] = {0.90, 0.36, -0.16, -0.09};
+      ptRangeCuts[make_pair(40., 50.)] = {0.96, 0.61, 0.14, 0.12};
+    } else if (wp == "loose") {
+      ptRangeCuts[make_pair(10., 20.)] = {-0.95, -0.72, -0.68, -0.47};
+      ptRangeCuts[make_pair(20., 30.)] = {-0.88, -0.55, -0.60, -0.43};
+      ptRangeCuts[make_pair(30., 40.)] = {-0.63, -0.18, -0.43, -0.24};
+      ptRangeCuts[make_pair(40., 50.)] = {-0.19, 0.22, -0.13, -0.03};
+    } else {
+      std::cerr << "[Jet::Pass_PileupJetID] Wrong WP : " << wp << std::endl;
+      exit(EXIT_FAILURE);
+    }
+  } else {
+    std::cerr << "[Jet::Pass_PileupJetID] Wrong era : " << era << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  // Find applicable pt range
+  for (const auto& [ptRange, cuts]: ptRangeCuts) {
+    if (Pt() > ptRange.first && Pt() < ptRange.second) {
+      const double absEta = fabs(Eta());
+      if (absEta < 2.5) {
+        return j_PileupJetId > cuts.eta2p5;
+      } else if (absEta < 2.75) {
+        return j_PileupJetId > cuts.eta2p75;
+      } else if (absEta < 3.0) {
+        return j_PileupJetId > cuts.eta3p0;
+      } else if (absEta < 5.0) {
+        return j_PileupJetId > cuts.eta5p0;
+      } else {
+        std::cerr << "[Jet::Pass_PileupJetID] Wrong eta : " << absEta << std::endl;
+        exit(EXIT_FAILURE);
+      }
+    }
+  }
+}
+
 bool Jet::PassID(TString ID) const {
 
   if(ID=="tight") return Pass_tightJetID();
   if(ID=="tightLepVeto") return Pass_tightLepVetoJetID();
+  if(ID=="tightWithTightPUID16a") return Pass_tightJetID() && Pass_PileupJetID("2016preVFP", "tight");
+  if(ID=="tightWithTightPUID16b") return Pass_tightJetID() && Pass_PileupJetID("2016postVFP", "tight");
+  if(ID=="tightWithTightPUID17") return Pass_tightJetID() && Pass_PileupJetID("2017", "tight");
+  if(ID=="tightWithTightPUID18") return Pass_tightJetID() && Pass_PileupJetID("2018", "tight");
+  if(ID=="tightWithMediumPUID16a") return Pass_tightJetID() && Pass_PileupJetID("2016preVFP", "medium");
+  if(ID=="tightWithMediumPUID16b") return Pass_tightJetID() && Pass_PileupJetID("2016postVFP", "medium");
+  if(ID=="tightWithMediumPUID17") return Pass_tightJetID() && Pass_PileupJetID("2017", "medium");
+  if(ID=="tightWithMediumPUID18") return Pass_tightJetID() && Pass_PileupJetID("2018", "medium");
+  if(ID=="tightWithLoosePUID16a") return Pass_tightJetID() && Pass_PileupJetID("2016preVFP", "loose");
+  if(ID=="tightWithLoosePUID16b") return Pass_tightJetID() && Pass_PileupJetID("2016postVFP", "loose");
+  if(ID=="tightWithLoosePUID17") return Pass_tightJetID() && Pass_PileupJetID("2017", "loose");
+  if(ID=="tightWithLoosePUID18") return Pass_tightJetID() && Pass_PileupJetID("2018", "loose");
 
   cout << "[Jet::PassID] No id : " << ID << endl;
   exit(ENODATA);
