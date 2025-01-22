@@ -1,2 +1,0 @@
-# alias PD xsec nmc sumw
-ttWToQQ	TTWJetsToQQ_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8	0.4062	833298	430310

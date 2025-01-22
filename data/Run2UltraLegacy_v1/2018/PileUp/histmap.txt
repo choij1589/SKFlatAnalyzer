@@ -1,3 +1,0 @@
-MC_2018 central PileupWeight2018.root
-MC_2018 sig_down PileupWeight2018.root
-MC_2018 sig_up PileupWeight2018.root
