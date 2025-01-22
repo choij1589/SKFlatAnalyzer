@@ -1,2 +1,0 @@
-# alias PD xsec nmc sumw
-WWToLNuQQ_powheg	WWToLNuQQ_13TeV-powheg	49.997	8654600	8654600
