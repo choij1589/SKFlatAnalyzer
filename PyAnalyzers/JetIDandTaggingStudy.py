@@ -54,24 +54,25 @@ class JetIDandTaggingStudy(TriLeptonBase):
             processEvent(variation)
     
     def defineObjects(self, rawObjects, variation):
+        jetID = ""
         # Define Jet ID
         if variation == "MediumPUID":
-            if self.DataEra == "2016a":
+            if self.DataEra == "2016preVFP":
                 jetID = "tightWithMediumPUID16a"
-            elif self.DataEra == "2016b":
+            if self.DataEra == "2016postVFP":
                 jetID = "tightWithMediumPUID16b"
-            elif self.DataEra == "2017":
+            if self.DataEra == "2017":
                 jetID = "tightWithMediumPUID17"
-            elif self.DataEra == "2018":
+            if self.DataEra == "2018":
                 jetID = "tightWithMediumPUID18"
         elif variation == "LoosePUID":
-            if self.DataEra == "2016a":
+            if self.DataEra == "2016preVFP":
                 jetID = "tightWithLoosePUID16a"
-            elif self.DataEra == "2016b":
+            if self.DataEra == "2016postVFP":
                 jetID = "tightWithLoosePUID16b"
-            elif self.DataEra == "2017":
+            if self.DataEra == "2017":
                 jetID = "tightWithLoosePUID17"
-            elif self.DataEra == "2018":
+            if self.DataEra == "2018":
                 jetID = "tightWithLoosePUID18"
         else:
             jetID = "tight"

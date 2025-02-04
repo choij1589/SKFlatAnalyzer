@@ -174,6 +174,9 @@ bool Jet::Pass_PileupJetID(const TString era, const TString wp) const {
       }
     }
   }
+  // EOF, should not reach here
+  std::cerr << "[Jet::Pass_PileupJetID] Should not reach here" << std::endl;
+  exit(EXIT_FAILURE);
 }
 
 bool Jet::PassID(TString ID) const {
