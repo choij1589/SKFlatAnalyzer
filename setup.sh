@@ -1,47 +1,45 @@
 #!/bin/bash
-#export HOSTNAME=`hostname`
-#if [[ $HOSTNAME == *"Mac"* ]]; then
-#    RELEASE=""
-#else
-#HOSTNAME=`hostname`
+# check os
+if [[ "$(uname)" == "Darwin" ]]; then
+    export SYSTEM="osx"
+elif [[ -f "/etc/redhat-release" ]]; then
+    export SYSTEM="redhat"
+else
+    echo "Unsupported OS"
+    return 1
+fi
+
+HOSTNAME=`hostname`
 RELEASE="`cat /etc/redhat-release`"
-#fi
 
 echo "@@@@ Working in $HOSTNAME"
-if [[ $HOSTNAME == *"ai-tamsa"* ]]; then
-  export SKFlat_WD="/data6/Users/$USER/SKFlatAnalyzer"
+if [[ $HOSTNAME == *"tamsa"* ]]; then
+  export SKFlat_WD="/data9/Users/$USER/Sync/workspace/SKFlatAnalyzer"
   export SKFlatRunlogDir="/gv0/Users/$USER/SKFlatRunlog"
   export SKFlatOutputDir="/gv0/Users/$USER/SKFlatOutput"
   # root configuration
-  source ~/.conda-activate
-  conda activate pyg
-elif [[ $HOSTNAME == *"tamsa"* ]]; then
-  export SKFlat_WD="/data6/Users/$USER/SKFlatAnalyzer"
-  export SKFlatRunlogDir="/gv0/Users/$USER/SKFlatRunlog"
-  export SKFlatOutputDir="/gv0/Users/$USER/SKFlatOutput"
-  # root configuration
-  # Singlarity image
-  if [[ $RELEASE == *"Alma"* ]]; then
-    source /opt/conda/bin/activate
-    conda activate pyg
+  if [[ -n "$APPTAINER_NAME" || -n "$SINGULARITY_NAME" ]]; then
+    export PATH="/opt/conda/bin:${PATH}"
+    export MAMBA_ROOT_PREFIX="/opt/conda"
+    eval "$(micromamba shell hook -s zsh)"
+    micromamba activate Nano
   else
+    export PATH="$HOME/micromamba/bin:${PATH}"
+    export MAMBA_ROOT_PREFIX="$HOME/micromamba"
+    eval "$(micromamba shell hook -s zsh)"
+    micromamba activate Nano
     # temporarily use ROOT and python from LCG environment
-    source /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-centos7-gcc12-opt/setup.sh
+    #source /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-centos7-gcc12-opt/setup.sh
   fi
-elif [[ $HOSTNAME == *"cms"* ]]; then
-  export SKFlat_WD="/data6/Users/$USER/SKFlatAnalyzer"
-  export SKFlatRunlogDir="/data6/Users/$USER/SKFlatRunlog"
-  export SKFlatOutputDir="/data6/Users/$USER/SKFlatOutput"
-  # root configuration
-  source /home/choij/miniconda3/bin/activate
-  conda activate pyg
 elif [[ $HOSTNAME == *"private"* ]]; then
-  export SKFlat_WD="/home/$USER/workspace/SKFlatAnalyzer"
+  export SKFlat_WD="/home/$USER/Sync/workspace/SKFlatAnalyzer"
   export SKFlatRunlogDir="/home/$USER/workspace/SKFlatRunlog"
   export SKFlatOutputDir="/home/$USER/workspace/SKFlatOutput"
   # root configuration
-  source ~/.conda-activate
-  conda activate pyg
+  export PATH="$HOME/micromamba/bin:${PATH}"
+  export MAMBA_ROOT_PREFIX="$HOME/micromamba"
+  eval "$(micromamba shell hook -s zsh)"
+  micromamba activate Nano
 elif [[ $HOSTNAME == *"Mac"* ]]; then
   export SKFlat_WD="/Users/$USER/workspace/SKFlatAnalyzer"
   export SKFlatRunlogDir="/Users/$USER/workspace/SKFlatRunlog"
@@ -70,18 +68,11 @@ export PYTHONDIR=$SKFlat_WD/python/
 export PYTHONPATH="${PYTHONPATH}:${PYTHONDIR}"
 
 # setting LHAPDF
-if [[ -d "external/lhapdf" ]]; then
-    export PATH=$PATH:$SKFlat_WD/external/lhapdf/bin
-    #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SKFlat_WD/external/lhapdf/lib
-    #export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$SKFlat_WD/external/lhapdf/lib
-    export LHAPDFDIR=$SKFlat_WD/external/lhapdf
-    export LHAPDF_DATA_PATH=$SKFlat_WD/external/lhapdf/share/LHAPDF
-else
-    export LHAPDFDIR=$SKFlat_WD/external/lhapdf
-    export LHAPDF_DATA_PATH=$LHAPDFDIR/data
-fi
-export LHAPDF_INCLUDE_DIR=`lhapdf-config --incdir`
-export LHAPDF_LIB_DIR=`lhapdf-config --libdir`
+export PATH=$PATH:$SKFlat_WD/external/lhapdf/$SYSTEM/bin
+export LHAPDFDIR=$SKFlat_WD/external/lhapdf/$SYSTEM
+export LHAPDF_DATA_PATH=$SKFlat_WD/external/lhapdf/data
+export LHAPDF_INCLUDE_DIR=$SKFlat_WD/external/lhapdf/$SYSTEM/include
+export LHAPDF_LIB_DIR=$SKFlat_WD/external/lhapdf/$SYSTEM/lib
 
 echo "@@@@ LHAPDF include: $LHAPDF_INCLUDE_DIR"
 echo "@@@@ LHAPDF lib: $LHAPDF_LIB_DIR"

@@ -12,8 +12,8 @@ export PYTHONDIR="$SKFlat_WD/python"
 export PATH=${MYBIN}:${PYTHONDIR}:${PATH}
 export PYTHONPATH="${PYTHONPATH}:${PYTHONDIR}"
 export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$SKFlat_WD/DataFormats/include/:$SKFlat_WD/AnalyzerTools/include/:$SKFlat_WD/Analyzers/include/
-export LHAPDFDIR=$SKFlat_WD/external/lhapdf
-export LHAPDF_DATA_PATH=$LHAPDFDIR/data
+export LHAPDFDIR=$SKFlat_WD/external/lhapdf/redhat
+export LHAPDF_DATA_PATH=$SKFlat_WD/external/lhapdf/data
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SKFlat_LIB_PATH:$LHAPDFDIR/lib
 
 source $SKFlat_WD/bin/BashColorSets.sh
@@ -25,8 +25,10 @@ export LC_ALL=C
 export ROOT_HIST=0
 
 #### User conda env for root
-source /opt/conda/bin/activate
-conda activate pyg
+export PATH="/opt/conda/bin:${PATH}"
+export MAMBA_ROOT_PREFIX="/opt/conda"
+eval "$(micromamba shell hook -s bash)"
+micromamba activate Nano
 
 #### modifying LD_LIBRARY_PATH to use libraries in baseRunDir
 export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH|sed 's@'$SKFlat_WD'/lib@[masterJobDir]/lib@')
